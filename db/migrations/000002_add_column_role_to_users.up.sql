@@ -1,0 +1,1 @@
+Alter table users add column if not exists role text not null default 'user'
