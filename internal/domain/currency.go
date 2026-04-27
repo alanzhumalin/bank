@@ -14,27 +14,27 @@ CREATE TABLE IF NOT EXISTS CURRENCIES(
 );
 */
 type Сurrency struct {
-	id         int
-	name       string
-	code       string
-	symbol     string
-	created_at time.Time
+	Id         int
+	Name       string
+	Code       string
+	Symbol     string
+	Created_at time.Time
 }
 
 func NewCurrency(name string, code string, symbol string) Сurrency {
 	return Сurrency{
-		name:   name,
-		code:   code,
-		symbol: symbol,
+		Name:   name,
+		Code:   code,
+		Symbol: symbol,
 	}
 }
 
 func NewCurrencyFromDB(id int, name string, code string, symbol string, created_at time.Time) Сurrency {
 	return Сurrency{
-		id:         id,
-		name:       name,
-		code:       code,
-		symbol:     symbol,
-		created_at: created_at,
+		Id:         id,
+		Name:       name,
+		Code:       code,
+		Symbol:     symbol,
+		Created_at: created_at,
 	}
 }
