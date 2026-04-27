@@ -49,7 +49,7 @@ func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = u.userService.CreateUser(r.Context(), req)
+	err = u.userService.Create(r.Context(), req)
 
 	if err != nil {
 		switch {

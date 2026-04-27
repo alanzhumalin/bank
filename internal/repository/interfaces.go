@@ -14,3 +14,10 @@ type UserRepository interface {
 	Update(ctx context.Context, user domain.User) error
 	GetByPhone(ctx context.Context, phone string) (domain.User, error)
 }
+
+type CurrencyRepository interface {
+	Create(ctx context.Context, c domain.Сurrency) error
+	Delete(ctx context.Context, id int) error
+	GetById(ctx context.Context, id int) (domain.Сurrency, error)
+	UpdateById(ctx context.Context, id int, name string, code string, symbol string) error
+}
