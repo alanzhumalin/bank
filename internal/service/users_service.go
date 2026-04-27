@@ -21,7 +21,7 @@ func NewUserService(repo repository.UserRepository, log zerolog.Logger) UserServ
 	}
 }
 
-func (s *userService) CreateUser(ctx context.Context, req dto.CreateUserRequest) error {
+func (s *userService) Create(ctx context.Context, req dto.CreateUserRequest) error {
 
 	err := s.repo.UserExists(ctx, req.PhoneNumber)
 	if err != nil {
