@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS CURRENCIES(
 
 );
 */
-type currency struct {
+type Сurrency struct {
 	id         int
 	name       string
 	code       string
@@ -21,16 +21,16 @@ type currency struct {
 	created_at time.Time
 }
 
-func NewCurrency(name string, code string, symbol string) currency {
-	return currency{
+func NewCurrency(name string, code string, symbol string) Сurrency {
+	return Сurrency{
 		name:   name,
 		code:   code,
 		symbol: symbol,
 	}
 }
 
-func NewCurrencyFromDB(id int, name string, code string, symbol string, created_at time.Time) currency {
-	return currency{
+func NewCurrencyFromDB(id int, name string, code string, symbol string, created_at time.Time) Сurrency {
+	return Сurrency{
 		id:         id,
 		name:       name,
 		code:       code,
