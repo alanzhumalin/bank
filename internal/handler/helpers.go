@@ -6,13 +6,17 @@ import (
 )
 
 func WriteJson(w http.ResponseWriter, status int, message any) {
-	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(message)
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]any{
+		"data": message,
+	})
 }
 
-func WriteError(w http.ResponseWriter, status int, errorMessage string) {
-	WriteJson(w, status, map[string]string{
-		"error": errorMessage,
+func WriteError(w http.ResponseWriter, status int, message any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]any{
+		"error": message,
 	})
 }
