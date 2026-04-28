@@ -42,7 +42,7 @@ func (c *currentRepository) Create(ctx context.Context, currency domain.Сurrenc
 }
 func (c *currentRepository) GetById(ctx context.Context, id int) (domain.Сurrency, error) {
 	var currency domain.Сurrency
-	err := c.pool.QueryRow(ctx, `select * from currencies`).Scan(&currency.Id, &currency.Name, &currency.Code, &currency.Symbol, &currency.Created_at)
+	err := c.pool.QueryRow(ctx, `select id, name, code, symbol, created_at from currencies`).Scan(&currency.Id, &currency.Name, &currency.Code, &currency.Symbol, &currency.CreatedAt)
 
 	if err == nil {
 		return currency, nil
@@ -66,4 +66,49 @@ func (c *currentRepository) UpdateById(ctx context.Context, id int, name string,
 	}
 
 	return nil
+}
+
+func (c *currentRepository) Exists(ctx context.Context, code string) (bool, error) {
+	var id int
+
+	err := c.pool.QueryRow(ctx, `select id from currencies where code = $1`, code).Scan(&id)
+
+	if err == nil {
+		return true, nil
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("Error exists in currency_repository: %w", err)
+
+}
+
+func (c *currentRepository) GetAll(ctx context.Context) ([]domain.Сurrency, error) {
+	var currencies []domain.Сurrency
+
+	rows, err := c.pool.Query(ctx, `select id,name,code,symbol,created_at from currencies`)
+
+	if err != nil {
+		return []domain.Сurrency{}, fmt.Errorf("Error getall currency in current_repository: %w", err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var currency domain.Сurrency
+		err := rows.Scan(&currency.Id, &currency.Name, &currency.Code, &currency.Symbol, &currency.CreatedAt)
+
+		if err != nil {
+			return []domain.Сurrency{}, fmt.Errorf("Error get row currency in current_repository: %w", err)
+		}
+
+		currencies = append(currencies, currency)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []domain.Сurrency{}, fmt.Errorf("Error rows in current_repository: %w", err)
+	}
+	return currencies, nil
 }
