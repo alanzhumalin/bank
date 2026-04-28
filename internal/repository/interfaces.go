@@ -20,4 +20,6 @@ type CurrencyRepository interface {
 	Delete(ctx context.Context, id int) error
 	GetById(ctx context.Context, id int) (domain.Сurrency, error)
 	UpdateById(ctx context.Context, id int, name string, code string, symbol string) error
+	Exists(ctx context.Context, code string) (bool, error)
+	GetAll(ctx context.Context) ([]domain.Сurrency, error)
 }

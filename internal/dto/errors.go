@@ -9,3 +9,9 @@ var (
 	ErrorPasswordRequired  = errors.New("Password is required")
 	ErrorPasswordTooShort  = errors.New("Password must be at least 8 characters")
 )
+
+var (
+	ErrorNameRequired   = errors.New("Name is required")
+	ErrorCodeRequired   = errors.New("Code is required")
+	ErrorSymbolRequired = errors.New("Symbol is required")
+)

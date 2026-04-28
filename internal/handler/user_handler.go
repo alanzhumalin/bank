@@ -66,9 +66,8 @@ func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.log.Info().Str("Firstname", req.FirstName).Str("LastName", req.LastName).Str("PhoneNumber", req.PhoneNumber).Dur("duration", time.Since(start)).Msg("Created new user")
-	WriteJson(w, http.StatusCreated, map[string]string{
-		"status": "created",
-	})
+
+	WriteJson(w, http.StatusCreated, "created")
 
 }
 
