@@ -1,6 +1,6 @@
 CREATE type transfer_status as enum ('pending', 'completed', 'failed');
 
-CREATE TABLE transfers(
+CREATE TABLE IF NOT EXISTS transfers(
     id BIGINT generated always as identity PRIMARY key,
     sender_account_id BIGINT not null REFERENCES accounts(id),
     receiver_account_id BIGINT not null REFERENCES accounts(id),
