@@ -28,3 +28,9 @@ type TransferService interface {
 	GetAll(ctx context.Context) ([]dto.TransferResponse, error)
 	GetById(ctx context.Context, id int) (dto.TransferResponse, error)
 }
+
+type AccountService interface {
+	Create(ctx context.Context, req dto.CreateAccountRequest) error
+	DeleteById(ctx context.Context, id int) error
+	GetAll(ctx context.Context) ([]dto.GetAccountResponse, error)
+}

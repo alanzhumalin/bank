@@ -51,6 +51,24 @@ func (c *CreateNewCurrencyRequest) Validate() error {
 	return nil
 }
 
+func NewCurrency(name string, code string, symbol string) domain.Сurrency {
+	return domain.Сurrency{
+		Name:   name,
+		Code:   code,
+		Symbol: symbol,
+	}
+}
+
+func NewCurrencyFromDB(id int, name string, code string, symbol string, created_at time.Time) domain.Сurrency {
+	return domain.Сurrency{
+		Id:        id,
+		Name:      name,
+		Code:      code,
+		Symbol:    symbol,
+		CreatedAt: created_at,
+	}
+}
+
 /*
 CREATE TABLE IF NOT EXISTS CURRENCIES(
 
