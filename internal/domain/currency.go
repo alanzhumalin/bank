@@ -9,21 +9,3 @@ type Сurrency struct {
 	Symbol    string
 	CreatedAt time.Time
 }
-
-func NewCurrency(name string, code string, symbol string) Сurrency {
-	return Сurrency{
-		Name:   name,
-		Code:   code,
-		Symbol: symbol,
-	}
-}
-
-func NewCurrencyFromDB(id int, name string, code string, symbol string, created_at time.Time) Сurrency {
-	return Сurrency{
-		Id:        id,
-		Name:      name,
-		Code:      code,
-		Symbol:    symbol,
-		CreatedAt: created_at,
-	}
-}
