@@ -23,3 +23,9 @@ type CurrencyRepository interface {
 	Exists(ctx context.Context, code string) (bool, error)
 	GetAll(ctx context.Context) ([]domain.Сurrency, error)
 }
+
+type TransferRepository interface {
+	Create(ctx context.Context, t domain.Transfer) error
+	GetById(ctx context.Context, id int) (domain.Transfer, error)
+	GetAll(ctx context.Context) ([]domain.Transfer, error)
+}
