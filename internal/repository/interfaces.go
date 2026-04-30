@@ -13,6 +13,7 @@ type UserRepository interface {
 	Delete(ctx context.Context, id int) error
 	Update(ctx context.Context, user domain.User) error
 	GetByPhone(ctx context.Context, phone string) (domain.User, error)
+	GetAll(ctx context.Context) ([]domain.User, error)
 }
 
 type CurrencyRepository interface {
@@ -28,4 +29,8 @@ type TransferRepository interface {
 	Create(ctx context.Context, t domain.Transfer) error
 	GetById(ctx context.Context, id int) (domain.Transfer, error)
 	GetAll(ctx context.Context) ([]domain.Transfer, error)
+}
+
+type AccountRepository interface {
+	Create(ctx context.Context, a domain.Account) error
 }

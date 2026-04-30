@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	user "github.com/alanzhumalin/bank/internal/domain"
@@ -31,6 +32,45 @@ func NewUserRepository(pool *pgxpool.Pool) UserRepository {
 //     created_at TIMESTAMPtz not null default now()
 //	   role text not null default 'user'
 // );
+
+type User struct {
+	Id          int
+	FirstName   string
+	LastName    string
+	Birthday    time.Time
+	PhoneNumber string
+	Password    string
+	CreatedAt   time.Time
+	Role        string
+}
+
+func (u *userRepository) GetAll(ctx context.Context) ([]domain.User, error) {
+	rows, err := u.pool.Query(ctx, `select id, firstname, lastname, birthday, phone_number, created_at, role from users`)
+
+	if err != nil {
+		return []domain.User{}, fmt.Errorf("Error in get all, user_repository: %w", err)
+	}
+
+	sl := make([]domain.User, 0)
+
+	for rows.Next() {
+		var req domain.User
+
+		err := rows.Scan(&req.Id, &req.FirstName, &req.LastName, &req.Birthday, &req.PhoneNumber, &req.CreatedAt, &req.Role)
+
+		if err != nil {
+			return []domain.User{}, fmt.Errorf("Error in a loop, after scan: %w", err)
+		}
+
+		sl = append(sl, req)
+	}
+	rows.Close()
+
+	if err := rows.Err(); err != nil {
+		return []domain.User{}, fmt.Errorf("Error in get all, in rows: %w", err)
+	}
+	return sl, nil
+}
 
 func (u *userRepository) UserExists(ctx context.Context, phoneNumber string) error {
 	var num int
