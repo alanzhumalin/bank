@@ -33,4 +33,6 @@ type TransferRepository interface {
 
 type AccountRepository interface {
 	Create(ctx context.Context, a domain.Account) error
+	DeleteById(ctx context.Context, id int) error
+	GetAll(ctx context.Context) ([]domain.Account, error)
 }
