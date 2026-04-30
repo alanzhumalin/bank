@@ -17,7 +17,7 @@ func UserRouter(userHandler *userHandler) http.Handler {
 
 	mux.HandleFunc("POST /", userHandler.CreateUser)
 	mux.HandleFunc("GET /{phone}", userHandler.GetByPhone)
-
+	mux.HandleFunc("GET /", userHandler.GetAll)
 	return mux
 }
 
@@ -28,6 +28,20 @@ type userHandler struct {
 
 func NewUserHandler(service service.UserService, logger zerolog.Logger) *userHandler {
 	return &userHandler{userService: service, log: logger.With().Str("component", "user_handler").Logger()}
+}
+
+func (u *userHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+	users, err := u.userService.GetAll(r.Context())
+
+	if err != nil {
+		u.log.Error().Err(err).Msg("Error in get all users")
+		WriteError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	u.log.Info().Msg("Get all users")
+
+	WriteJson(w, http.StatusOK, users)
 }
 
 func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
