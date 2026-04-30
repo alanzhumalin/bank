@@ -2,6 +2,8 @@ package dto
 
 import (
 	"time"
+
+	"github.com/alanzhumalin/bank/internal/domain"
 )
 
 // CREATE TABLE IF NOT EXISTS USERS (
@@ -36,7 +38,7 @@ func (g *GetUserByPhoneRequest) Validate() error {
 	return nil
 }
 
-type GetUserByPhoneResponse struct {
+type GetUser struct {
 	Id          int       `json:"id"`
 	FirstName   string    `json:"firstname"`
 	LastName    string    `json:"lastname"`
@@ -44,6 +46,18 @@ type GetUserByPhoneResponse struct {
 	PhoneNumber string    `json:"phone_number"`
 	CreatedAt   time.Time `json:"created_at"`
 	Role        string    `json:"role"`
+}
+
+func ToGetUser(u domain.User) GetUser {
+	return GetUser{
+		Id:          u.Id,
+		FirstName:   u.FirstName,
+		LastName:    u.LastName,
+		Birthday:    u.Birthday,
+		PhoneNumber: u.PhoneNumber,
+		CreatedAt:   u.CreatedAt,
+		Role:        u.Role,
+	}
 }
 
 func (c *CreateUserRequest) Validate() error {

@@ -22,3 +22,8 @@ var (
 	ErrorCurrencyIdRequired = errors.New("Currency id is required")
 	ErrorAmountRequired     = errors.New("Amount is required")
 )
+
+var (
+	ErrorUserIdRequired = errors.New("User id is required")
+	CurrencyIdRequired  = errors.New("Currency id is required")
+)
