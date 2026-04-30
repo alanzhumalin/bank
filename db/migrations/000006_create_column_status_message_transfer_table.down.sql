@@ -1,0 +1,1 @@
+alter table if exists transfers add column if not exists status_message text not null;
