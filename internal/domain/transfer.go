@@ -34,7 +34,7 @@ func NewTransferFromDb(id int, senderId int, receiverId int, currency Сurrency,
 	}
 }
 
-func NewTransfer(id int, senderId int, receiverId int, currencyId int, amount float64, createdAt time.Time) Transfer {
+func NewTransfer(senderId int, receiverId int, currencyId int, amount float64) Transfer {
 	return Transfer{
 		SenderAccountId:   senderId,
 		ReceiverAccountId: receiverId,
