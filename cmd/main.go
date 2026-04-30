@@ -52,10 +52,16 @@ func main() {
 	currencyHandler := handler.NewCurrencyHandler(currencyService, logger)
 	currencyRouter := handler.CurrencyRouter(currencyHandler)
 
+	transferRepository := repository.NewTransferRepository(pool)
+	transferService := service.NewTransferService(transferRepository)
+	transferHandler := handler.NewTransferHandler(transferService, logger)
+	transferRouter := handler.TransferRouter(transferHandler)
+
 	root := http.NewServeMux()
 
 	root.Handle("/users/", http.StripPrefix("/users", userRouter))
 	root.Handle("/currency/", http.StripPrefix("/currency", currencyRouter))
+	root.Handle("/transfer/", http.StripPrefix("/transfer", transferRouter))
 
 	srv := http.Server{
 		Addr:    ":8081",
