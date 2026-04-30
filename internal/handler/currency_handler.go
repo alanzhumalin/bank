@@ -18,6 +18,7 @@ func CurrencyRouter(c *currencyHandler) http.Handler {
 	mux.HandleFunc("POST /", c.Create)
 	mux.HandleFunc("GET /", c.GetAll)
 	mux.HandleFunc("DELETE /{id}", c.Delete)
+	mux.HandleFunc("GET /{id}", c.GetById)
 
 	return mux
 }
@@ -32,6 +33,39 @@ func NewCurrencyHandler(service service.CurrencyService, logger zerolog.Logger) 
 		service: service,
 		logger:  logger.With().Str("component", "currency_handler").Logger(),
 	}
+}
+
+func (c *currencyHandler) GetById(w http.ResponseWriter, r *http.Request) {
+	pathId := r.PathValue("id")
+	if pathId == "" {
+		WriteError(w, http.StatusBadRequest, "id is required")
+		return
+	}
+
+	id, err := strconv.Atoi(pathId)
+
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "id must be a number")
+		return
+	}
+
+	res, err := c.service.GetById(r.Context(), id)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, domain.ErrorCurrencyNotFound):
+			WriteError(w, http.StatusBadRequest, "id must be a number")
+		default:
+			c.logger.Error().Err(err).Str("id", pathId).Msg("Error get by id currency_handler")
+			WriteError(w, http.StatusInternalServerError, "internal server error")
+
+		}
+		return
+	}
+
+	c.logger.Info().Str("id", pathId).Msg("Get by id ")
+	WriteJson(w, http.StatusOK, res)
+
 }
 
 func (c *currencyHandler) Create(w http.ResponseWriter, r *http.Request) {
