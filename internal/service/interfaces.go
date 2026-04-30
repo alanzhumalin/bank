@@ -22,3 +22,9 @@ type CurrencyService interface {
 	GetAll(ctx context.Context) ([]dto.GetCurrencyResponse, error)
 	GetById(ctx context.Context, id int) (dto.GetCurrencyResponse, error)
 }
+
+type TransferService interface {
+	Create(ctx context.Context, req dto.CreateTransferRequest) error
+	GetAll(ctx context.Context) ([]dto.TransferResponse, error)
+	GetById(ctx context.Context, id int) (dto.TransferResponse, error)
+}

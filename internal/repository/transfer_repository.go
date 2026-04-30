@@ -30,13 +30,12 @@ func (tr *transferRepository) GetAll(ctx context.Context) ([]domain.Transfer, er
 
 	rows, err := tr.pool.Query(ctx, `select tr.id, tr.sender_account_id, 
 	tr.receiver_account_id, tr.currency_id, 
-	tr.amount, tr.status, tr.status_message,
+	tr.amount, tr.status, tr.status_message, tr.created_at
 
 	c.name as currency_name, c.code as currency_code, c.symbol as currency_symbol, 
 	
-	sender.firstname as sender_firstname, sender.lastname as sender_lastname, sender.phone_number as sender_phone_number,
-
-	receiver.firstname as receiver_firstname, receiver.lastname as receiver_lastname, receiver.phone_number as receiver_phone_number
+	sender.firstname as sender_firstname, sender.lastname as sender_lastname, 
+	receiver.firstname as receiver_firstname, receiver.lastname as receiver_lastname, 
 	
 	from transfers tr join currencies c on tr.currency_id = c.id
 	join accounts senderacc on senderacc.id = tr.sender_account_id
@@ -44,7 +43,6 @@ func (tr *transferRepository) GetAll(ctx context.Context) ([]domain.Transfer, er
 	join users sender on senderacc.user_id = sender.id
 	join users receiver on receiveracc.user_id = receiver.id
 
-	
 	`)
 
 	if err != nil {
@@ -55,10 +53,10 @@ func (tr *transferRepository) GetAll(ctx context.Context) ([]domain.Transfer, er
 		var transfer domain.Transfer
 
 		err := rows.Scan(&transfer.Id, &transfer.SenderAccountId, &transfer.ReceiverAccountId, &transfer.CurrencyId, &transfer.Amount,
-			&transfer.Status, &transfer.StatusMessage,
+			&transfer.Status, &transfer.StatusMessage, &transfer.CreatedAt,
 			&transfer.Currency.Name, &transfer.Currency.Code, &transfer.Currency.Symbol,
-			&transfer.Sender.FirstName, &transfer.Sender.LastName, &transfer.Sender.PhoneNumber,
-			&transfer.Receiver.FirstName, &transfer.Receiver.LastName, &transfer.Receiver.PhoneNumber,
+			&transfer.Sender.FirstName, &transfer.Sender.LastName,
+			&transfer.Receiver.FirstName, &transfer.Receiver.LastName,
 		)
 
 		if err != nil {
@@ -84,26 +82,27 @@ func (tr *transferRepository) GetById(ctx context.Context, id int) (domain.Trans
 	err := tr.pool.QueryRow(ctx, `select tr.id, tr.sender_account_id, 
 	tr.receiver_account_id, tr.currency_id, 
 	tr.amount, tr.status, tr.status_message,
+	tr.created_at
 
 	c.name as currency_name, c.code as currency_code, c.symbol as currency_symbol, 
 	
-	sender.firstname as sender_firstname, sender.lastname as sender_lastname, sender.phone_number as sender_phone_number,
+	sender.firstname as sender_firstname, sender.lastname as sender_lastname,
 
 	receiver.firstname as receiver_firstname, receiver.lastname as receiver_lastname, receiver.phone_number as receiver_phone_number
 	
 	from transfers tr join currencies c on tr.currency_id = c.id
-	join accounts senderacc on a.id = tr.sender_account_id
-	join accounts receiveracc on a.id = tr.receiver_account_id
+	join accounts senderacc on senderacc.id = tr.sender_account_id
+	join accounts receiveracc on senderacc.id = tr.receiver_account_id
 	join users sender on senderacc.user_id = sender.id
 	join users receiver on receiveracc.user_id = receiver.id
 
 	where tr.id = $1
 	
 	`, id).Scan(&transfer.Id, &transfer.SenderAccountId, &transfer.ReceiverAccountId, &transfer.CurrencyId, &transfer.Amount,
-		&transfer.Status, &transfer.StatusMessage,
+		&transfer.Status, &transfer.StatusMessage, &transfer.CreatedAt,
 		&transfer.Currency.Name, &transfer.Currency.Code, &transfer.Currency.Symbol,
-		&transfer.Sender.FirstName, &transfer.Sender.LastName, &transfer.Sender.PhoneNumber,
-		&transfer.Receiver.FirstName, &transfer.Receiver.LastName, &transfer.Receiver.PhoneNumber,
+		&transfer.Sender.FirstName, &transfer.Sender.LastName,
+		&transfer.Receiver.FirstName, &transfer.Receiver.LastName,
 	)
 
 	if err != nil {
@@ -116,34 +115,6 @@ func (tr *transferRepository) GetById(ctx context.Context, id int) (domain.Trans
 	return transfer, nil
 
 }
-
-// CREATE TABLE IF NOT EXISTS transfers(
-//     id BIGINT generated always as identity PRIMARY key,
-//     sender_account_id BIGINT not null REFERENCES accounts(id),
-//     receiver_account_id BIGINT not null REFERENCES accounts(id),
-//     currency_id BIGINT not null REFERENCES currencies(id),
-//     amount numeric(12,2) not null check (amount > 0),
-//     status transfer_status not null DEFAULT 'pending',
-//     created_at TIMESTAMPtz not null default now(),
-// 	   status_message
-// );
-// create table accounts(
-//     id BIGINT generated always as identity PRIMARY KEY,
-//     user_id BIGINT not null REFERENCES users(id),
-//     currency_id BIGINT not null REFERENCES currencies(id),
-//     balance numeric(12,2) not null DEFAULT 0,
-//     is_active BOOLEAN not null DEFAULT true,
-//     created_at TIMESTAMPTZ not null DEFAULT now()
-// );
-// CREATE TABLE IF NOT EXISTS USERS (
-//     id BIGINT generated always as identity primary key,
-//     firstname text not null,
-//     lastname text not null,
-//     birthday TIMESTAMPtz not null,
-//     phone_number text not null,
-//     password text not null,
-//     created_at TIMESTAMPtz not null default now()
-// );
 
 func (tr *transferRepository) Create(ctx context.Context, t domain.Transfer) error {
 	tx, err := tr.pool.Begin(ctx)
