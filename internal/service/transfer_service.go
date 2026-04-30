@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 
-	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/repository"
 )
@@ -17,7 +16,7 @@ func NewTransferService(repo repository.TransferRepository) TransferService {
 }
 
 func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequest) error {
-	transfer := domain.NewTransfer(req.SenderAccountId, req.ReceiverAccountId, req.CurrencyId, float64(req.Amount))
+	transfer := dto.NewTransfer(req.SenderAccountId, req.ReceiverAccountId, req.CurrencyId, float64(req.Amount))
 
 	return t.repo.Create(ctx, transfer)
 }

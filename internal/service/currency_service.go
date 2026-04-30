@@ -28,7 +28,7 @@ func (c *currencyService) Create(ctx context.Context, req dto.CreateNewCurrencyR
 		return domain.ErrorCurrencyAlreadyExists
 	}
 
-	currency := domain.NewCurrency(req.Name, req.Code, req.Symbol)
+	currency := dto.NewCurrency(req.Name, req.Code, req.Symbol)
 
 	err = c.repo.Create(ctx, currency)
 
