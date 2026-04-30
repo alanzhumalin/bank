@@ -15,3 +15,10 @@ var (
 	ErrorCodeRequired   = errors.New("Code is required")
 	ErrorSymbolRequired = errors.New("Symbol is required")
 )
+
+var (
+	ErrorSenderIdRequired   = errors.New("Sender account id is required")
+	ErrorReceiverIdRequired = errors.New("Receiver account id is required")
+	ErrorCurrencyIdRequired = errors.New("Currency id is required")
+	ErrorAmountRequired     = errors.New("Amount is required")
+)
