@@ -20,9 +20,6 @@ func NewTransferService(transferRepo repository.TransferRepository, txManager re
 }
 
 func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequest) error {
-	// transfer := dto.NewTransfer(req.SenderAccountId, req.ReceiverAccountId, req.CurrencyId, float64(req.Amount))
-
-	// return t.repo.Create(ctx, transfer)
 
 	err := t.txManager.WithTx(ctx, func(ctx context.Context) error {
 		acc1, acc2, err := t.accountRepo.SelectTwoAccountsForUpdate(ctx, req.SenderAccountId, req.ReceiverAccountId)
