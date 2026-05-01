@@ -5,6 +5,9 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	user "github.com/alanzhumalin/bank/internal/domain"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/shopspring/decimal"
 )
 
 type UserRepository interface {
@@ -26,13 +29,27 @@ type CurrencyRepository interface {
 }
 
 type TransferRepository interface {
-	Create(ctx context.Context, t domain.Transfer) error
-	GetById(ctx context.Context, id int) (domain.Transfer, error)
-	GetAll(ctx context.Context) ([]domain.Transfer, error)
 }
 
 type AccountRepository interface {
 	Create(ctx context.Context, a domain.Account) error
 	DeleteById(ctx context.Context, id int) error
 	GetAll(ctx context.Context) ([]domain.Account, error)
+	SelectTwoAccountsForUpdate(ctx context.Context, senderAccountId int, receiverAccountId int) (domain.Account, domain.Account, error)
+	IncreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error
+	DecreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error
+}
+
+type TxManagerRepository interface {
+	WithTx(ctx context.Context, fn func(ctx context.Context) error) error
+}
+type Querier interface {
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+
+type TransactionRepository interface {
+	Create(ctx context.Context, t domain.Transaction) (int, error)
+	MarkTransaction(ctx context.Context, status string, status_message string, id int) error
 }

@@ -1,18 +1,14 @@
 package domain
 
-import (
-	"time"
-)
+import "github.com/shopspring/decimal"
 
 type Transfer struct {
 	Id                int
+	TransactionId     int
 	SenderAccountId   int
 	ReceiverAccountId int
 	CurrencyId        int
-	Amount            float64
-	Status            string
-	CreatedAt         time.Time
-	StatusMessage     string
+	Amount            decimal.Decimal
 	Sender            User
 	Receiver          User
 	Currency          Сurrency

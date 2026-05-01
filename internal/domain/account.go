@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 // create table accounts(
 //     id BIGINT generated always as identity PRIMARY KEY,
@@ -15,7 +19,7 @@ type Account struct {
 	Id         int
 	UserId     int
 	CurrencyId int
-	Balance    float64
+	Balance    decimal.Decimal
 	IsActive   bool
 	CreatedAt  time.Time
 }

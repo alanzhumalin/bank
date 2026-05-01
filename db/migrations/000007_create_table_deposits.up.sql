@@ -14,10 +14,8 @@ END $$;
 
 create table if not exists deposits(
     id BIGINT generated always as identity PRIMARY KEY,
-    account_id BIGINT REFERENCES accounts(id),
+    transaction_id BIGINT REFERENCES transactions(id) not null,
+    account_id BIGINT REFERENCES accounts(id) not null,
     amount numeric(12,2) not null check (amount>0),
-    source deposit_source not null,
-    status deposit_status not null default 'pending',
-    status_message text not null,
-    created_at TIMESTAMPtz not null DEFAULT now()
+    source deposit_source not null
 );
