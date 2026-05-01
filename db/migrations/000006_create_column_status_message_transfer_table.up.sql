@@ -1,1 +1,0 @@
-alter table if exists transfers drop column if exists status_message;

@@ -25,3 +25,7 @@ var (
 var (
 	ErrorTransferNotFound = errors.New("Transfer not found")
 )
+
+var (
+	ErrorTransactionNotFound = errors.New("Transaction not found")
+)

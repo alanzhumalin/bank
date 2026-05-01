@@ -42,6 +42,8 @@ func main() {
 		logger.Fatal().Err(err).Msg("Error occured while connecting to db")
 	}
 
+	txManager := repository.NewTxManager(pool)
+
 	userRepository := repository.NewUserRepository(pool)
 	userService := service.NewUserService(userRepository, logger)
 	userHandler := handler.NewUserHandler(userService, logger)
@@ -52,15 +54,15 @@ func main() {
 	currencyHandler := handler.NewCurrencyHandler(currencyService, logger)
 	currencyRouter := handler.CurrencyRouter(currencyHandler)
 
-	transferRepository := repository.NewTransferRepository(pool)
-	transferService := service.NewTransferService(transferRepository)
-	transferHandler := handler.NewTransferHandler(transferService, logger)
-	transferRouter := handler.TransferRouter(transferHandler)
-
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
 	accountHandler := handler.NewAccountHandler(accountService, logger)
 	accountRouter := handler.AccountRouter(accountHandler)
+
+	transferRepository := repository.NewTransferRepository(pool)
+	transferService := service.NewTransferService(transferRepository, txManager, accountRepository)
+	transferHandler := handler.NewTransferHandler(transferService, logger)
+	transferRouter := handler.TransferRouter(transferHandler)
 
 	root := http.NewServeMux()
 

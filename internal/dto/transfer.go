@@ -4,13 +4,14 @@ import (
 	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
+	"github.com/shopspring/decimal"
 )
 
 type CreateTransferRequest struct {
-	SenderAccountId   int `json:"sender_account_id"`
-	ReceiverAccountId int `json:"receiver_account_id"`
-	CurrencyId        int `json:"currency_id"`
-	Amount            int `json:"amount"`
+	SenderAccountId   int             `json:"sender_account_id"`
+	ReceiverAccountId int             `json:"receiver_account_id"`
+	CurrencyId        int             `json:"currency_id"`
+	Amount            decimal.Decimal `json:"amount"`
 }
 
 func (c *CreateTransferRequest) Validate() error {
@@ -26,30 +27,27 @@ func (c *CreateTransferRequest) Validate() error {
 		return ErrorCurrencyIdRequired
 	}
 
-	if c.Amount <= 0 {
+	if c.Amount.LessThanOrEqual(decimal.Zero) {
 		return ErrorAmountRequired
 	}
 
 	return nil
 }
 
-func NewTransferFromDb(id int, senderId int, receiverId int, currency domain.Сurrency, currencyId int, amount float64, sender domain.User, receiver domain.User, status string, created_at time.Time, statusMessage string) domain.Transfer {
+func NewTransferFromDb(id int, senderId int, receiverId int, currency domain.Сurrency, currencyId int, amount decimal.Decimal, sender domain.User, receiver domain.User, status string, created_at time.Time, statusMessage string) domain.Transfer {
 	return domain.Transfer{
 		Id:                id,
 		SenderAccountId:   senderId,
 		ReceiverAccountId: receiverId,
 		CurrencyId:        currencyId,
 		Amount:            amount,
-		Status:            status,
-		CreatedAt:         created_at,
-		StatusMessage:     statusMessage,
 		Sender:            sender,
 		Receiver:          receiver,
 		Currency:          currency,
 	}
 }
 
-func NewTransfer(senderId int, receiverId int, currencyId int, amount float64) domain.Transfer {
+func NewTransfer(senderId int, receiverId int, currencyId int, amount decimal.Decimal) domain.Transfer {
 	return domain.Transfer{
 		SenderAccountId:   senderId,
 		ReceiverAccountId: receiverId,
@@ -73,21 +71,21 @@ CREATE TABLE IF NOT EXISTS transfers(
 */
 
 type TransferResponse struct {
-	Id                int       `json:"id"`
-	SenderAccountId   int       `json:"sender_account_id"`
-	SenderFirstName   string    `json:"sender_firstname"`
-	SenderLastName    string    `json:"sender_lastname"`
-	ReceiverAccountId int       `json:"receiver_account_id"`
-	ReceiverFirstName string    `json:"receiver_firstname"`
-	ReceiverLastName  string    `json:"receiver_lastname"`
-	CurrencyId        int       `json:"currency_id"`
-	CurrencyName      string    `json:"currency_name"`
-	CurrencyCode      string    `json:"currency_code"`
-	CurrencySymbol    string    `json:"currency_symbol"`
-	Amount            float64   `json:"amount"`
-	Status            string    `json:"status"`
-	StatusMessage     string    `json:"status_message"`
-	CreatedAt         time.Time `json:"created_at"`
+	Id                int             `json:"id"`
+	SenderAccountId   int             `json:"sender_account_id"`
+	SenderFirstName   string          `json:"sender_firstname"`
+	SenderLastName    string          `json:"sender_lastname"`
+	ReceiverAccountId int             `json:"receiver_account_id"`
+	ReceiverFirstName string          `json:"receiver_firstname"`
+	ReceiverLastName  string          `json:"receiver_lastname"`
+	CurrencyId        int             `json:"currency_id"`
+	CurrencyName      string          `json:"currency_name"`
+	CurrencyCode      string          `json:"currency_code"`
+	CurrencySymbol    string          `json:"currency_symbol"`
+	Amount            decimal.Decimal `json:"amount"`
+	Status            string          `json:"status"`
+	StatusMessage     string          `json:"status_message"`
+	CreatedAt         time.Time       `json:"created_at"`
 }
 
 func ToTransferResponse(tr domain.Transfer) *TransferResponse {
@@ -104,8 +102,5 @@ func ToTransferResponse(tr domain.Transfer) *TransferResponse {
 		CurrencyCode:      tr.Currency.Code,
 		CurrencySymbol:    tr.Currency.Symbol,
 		Amount:            tr.Amount,
-		Status:            tr.Status,
-		StatusMessage:     tr.StatusMessage,
-		CreatedAt:         tr.CreatedAt,
 	}
 }

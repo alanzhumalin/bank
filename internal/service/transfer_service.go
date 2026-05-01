@@ -3,46 +3,89 @@ package service
 import (
 	"context"
 
+	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/repository"
 )
 
 type transferService struct {
-	repo repository.TransferRepository
+	transferRepo    repository.TransferRepository
+	txManager       repository.TxManagerRepository
+	accountRepo     repository.AccountRepository
+	transactionRepo repository.TransactionRepository
 }
 
-func NewTransferService(repo repository.TransferRepository) TransferService {
-	return &transferService{repo: repo}
+func NewTransferService(transferRepo repository.TransferRepository, txManager repository.TxManagerRepository, accountRepo repository.AccountRepository) TransferService {
+	return &transferService{transferRepo: transferRepo, txManager: txManager, accountRepo: accountRepo}
 }
 
 func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequest) error {
-	transfer := dto.NewTransfer(req.SenderAccountId, req.ReceiverAccountId, req.CurrencyId, float64(req.Amount))
+	// transfer := dto.NewTransfer(req.SenderAccountId, req.ReceiverAccountId, req.CurrencyId, float64(req.Amount))
 
-	return t.repo.Create(ctx, transfer)
-}
+	// return t.repo.Create(ctx, transfer)
 
-func (t *transferService) GetAll(ctx context.Context) ([]dto.TransferResponse, error) {
-	transfers, err := t.repo.GetAll(ctx)
+	err := t.txManager.WithTx(ctx, func(ctx context.Context) error {
+		acc1, acc2, err := t.accountRepo.SelectTwoAccountsForUpdate(ctx, req.SenderAccountId, req.ReceiverAccountId)
 
-	if err != nil {
-		return []dto.TransferResponse{}, err
-	}
+		if err != nil {
+			return err
+		}
 
-	sl := make([]dto.TransferResponse, 0, len(transfers))
+		if acc2.CurrencyId != req.CurrencyId {
+			return domain.AccountNotSupportCurrency
+		}
 
-	for _, val := range transfers {
-		sl = append(sl, *dto.ToTransferResponse(val))
-	}
+		if !acc2.IsActive {
+			return domain.AccountIsNotActive
+		}
 
-	return sl, nil
-}
+		if acc1.CurrencyId != req.CurrencyId {
+			return domain.AccountNotSupportCurrency
+		}
+		if !acc1.IsActive {
+			return domain.AccountIsNotActive
+		}
 
-func (t *transferService) GetById(ctx context.Context, id int) (dto.TransferResponse, error) {
-	transfer, err := t.repo.GetById(ctx, id)
+		if acc1.Balance.LessThan(req.Amount) {
+			return domain.ErrorNotEnoughBalance
+		}
 
-	if err != nil {
-		return dto.TransferResponse{}, err
-	}
+		trans := domain.Transaction{
+			Type:          "transfer",
+			Amount:        req.Amount,
+			AccountId:     req.SenderAccountId,
+			Status:        "pending",
+			StatusMessage: "transaction started",
+		}
 
-	return *dto.ToTransferResponse(transfer), nil
+		id, err := t.transactionRepo.Create(ctx, trans)
+
+		if err != nil {
+			return err
+		}
+
+		err = t.accountRepo.DecreaseBalance(ctx, req.Amount, acc1.Id)
+
+		if err != nil {
+
+			return err
+		}
+
+		err = t.accountRepo.IncreaseBalance(ctx, req.Amount, acc2.Id)
+
+		if err != nil {
+			return err
+		}
+
+		err = t.transactionRepo.MarkTransaction(ctx, "completed", "transaction successfuly completed", id)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+
+	})
+
+	return err
 }

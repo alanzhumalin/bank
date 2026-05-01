@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
+	"github.com/shopspring/decimal"
 )
 
 type CreateAccountRequest struct {
@@ -12,12 +13,12 @@ type CreateAccountRequest struct {
 }
 
 type GetAccountResponse struct {
-	Id         int       `json:"id"`
-	UserId     int       `json:"user_id"`
-	CurrencyId int       `json:"currency_id"`
-	Balance    float64   `json:"balance"`
-	IsActive   bool      `json:"is_active"`
-	CreatedAt  time.Time `json:"created_at"`
+	Id         int             `json:"id"`
+	UserId     int             `json:"user_id"`
+	CurrencyId int             `json:"currency_id"`
+	Balance    decimal.Decimal `json:"balance"`
+	IsActive   bool            `json:"is_active"`
+	CreatedAt  time.Time       `json:"created_at"`
 }
 
 func ToGetAccountResponse(a domain.Account) GetAccountResponse {
