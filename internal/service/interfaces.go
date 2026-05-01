@@ -32,3 +32,7 @@ type AccountService interface {
 	DeleteById(ctx context.Context, id int) error
 	GetAll(ctx context.Context) ([]dto.GetAccountResponse, error)
 }
+
+type DepositService interface {
+	Create() error
+}

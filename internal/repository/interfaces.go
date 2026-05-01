@@ -54,3 +54,7 @@ type TransactionRepository interface {
 	Create(ctx context.Context, t domain.Transaction) (int, error)
 	MarkTransaction(ctx context.Context, status string, status_message string, id int) error
 }
+
+type DepositRepository interface {
+	Create(ctx context.Context, d domain.Deposit) error
+}
