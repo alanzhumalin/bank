@@ -2,9 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/alanzhumalin/bank/internal/domain"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/shopspring/decimal"
 )
@@ -76,6 +78,25 @@ func (a *accountRepository) SelectTwoAccountsForUpdate(ctx context.Context, send
 	}
 
 	return senderAccount, receiverAccount, nil
+
+}
+
+func (a *accountRepository) GetByIdForUpdate(ctx context.Context, id int) (domain.Account, error) {
+	q := a.querier(ctx)
+
+	var account domain.Account
+
+	err := q.QueryRow(ctx, `select id, user_id, currency_id, balance, is_active, created_at from accounts where id = $1 for update`, id).Scan(&account.Id, &account.UserId, &account.CurrencyId, &account.Balance, &account.IsActive)
+
+	if err == nil {
+		return account, nil
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Account{}, domain.AccountNotFound
+	}
+
+	return domain.Account{}, fmt.Errorf("Error in get by id account: %w", err)
 
 }
 
