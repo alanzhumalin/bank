@@ -54,15 +54,22 @@ func main() {
 	currencyHandler := handler.NewCurrencyHandler(currencyService, logger)
 	currencyRouter := handler.CurrencyRouter(currencyHandler)
 
+	transactionRepository := repository.NewTransactionRepository(pool)
+
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
 	accountHandler := handler.NewAccountHandler(accountService, logger)
 	accountRouter := handler.AccountRouter(accountHandler)
 
 	transferRepository := repository.NewTransferRepository(pool)
-	transferService := service.NewTransferService(transferRepository, txManager, accountRepository)
+	transferService := service.NewTransferService(transferRepository, txManager, accountRepository, transactionRepository)
 	transferHandler := handler.NewTransferHandler(transferService, logger)
 	transferRouter := handler.TransferRouter(transferHandler)
+
+	// depositRepository := repository.NewDepositRepository(pool)
+	// depositService := service.NewDepositService(depositRepository, accountRepository, txManager, transactionRepository)
+	// depositHandler := handler.NewDepositHandler(depositService, logger)
+	// depositRouter := handler.DepositRouter(depositHandler)
 
 	root := http.NewServeMux()
 

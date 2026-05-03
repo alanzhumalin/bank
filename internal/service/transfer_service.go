@@ -15,8 +15,8 @@ type transferService struct {
 	transactionRepo repository.TransactionRepository
 }
 
-func NewTransferService(transferRepo repository.TransferRepository, txManager repository.TxManagerRepository, accountRepo repository.AccountRepository) TransferService {
-	return &transferService{transferRepo: transferRepo, txManager: txManager, accountRepo: accountRepo}
+func NewTransferService(transferRepo repository.TransferRepository, txManager repository.TxManagerRepository, accountRepo repository.AccountRepository, transactionRepo repository.TransactionRepository) TransferService {
+	return &transferService{transferRepo: transferRepo, txManager: txManager, accountRepo: accountRepo, transactionRepo: transactionRepo}
 }
 
 func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequest) error {
