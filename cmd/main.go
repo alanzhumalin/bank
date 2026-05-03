@@ -79,11 +79,11 @@ func main() {
 	root := http.NewServeMux()
 
 	root.Handle("/users/", http.StripPrefix("/users", userRouter))
-	root.Handle("/currency/", http.StripPrefix("/currency", currencyRouter))
-	root.Handle("/transfer/", http.StripPrefix("/transfer", transferRouter))
-	root.Handle("/account/", http.StripPrefix("/account", accountRouter))
+	root.Handle("/currencies/", http.StripPrefix("/currency", currencyRouter))
+	root.Handle("/transfers/", http.StripPrefix("/transfer", transferRouter))
+	root.Handle("/accounts/", http.StripPrefix("/account", accountRouter))
 	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
-	root.Handle("/deposit/", http.StripPrefix("/deposit", depositRouter))
+	root.Handle("/deposits/", http.StripPrefix("/deposit", depositRouter))
 
 	srv := http.Server{
 		Addr:    ":8081",
