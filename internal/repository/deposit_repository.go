@@ -12,14 +12,6 @@ type depositRepository struct {
 	pool *pgxpool.Pool
 }
 
-func (dr *depositRepository) querier(ctx context.Context) Querier {
-	tx, ok := GetTx(ctx)
-	if !ok {
-		return dr.pool
-	}
-	return tx
-}
-
 func NewDepositRepository(pool *pgxpool.Pool) DepositRepository {
 	return &depositRepository{
 		pool: pool,
@@ -27,7 +19,7 @@ func NewDepositRepository(pool *pgxpool.Pool) DepositRepository {
 }
 
 func (dr *depositRepository) Create(ctx context.Context, d domain.Deposit) error {
-	q := dr.querier(ctx)
+	q := querier(ctx, dr.pool)
 
 	_, err := q.Exec(ctx, `insert into deposits(transaction_id, account_id, amount, source) values($1,$2,$3,$4)`, d.TransactionId, d.AccountId, d.Amount, d.Source)
 
