@@ -12,16 +12,6 @@ type transactionRepository struct {
 	pool *pgxpool.Pool
 }
 
-func (a *transactionRepository) querier(ctx context.Context) Querier {
-	tx, ok := GetTx(ctx)
-
-	if !ok {
-		return a.pool
-	}
-
-	return tx
-}
-
 func NewTransactionRepository(pool *pgxpool.Pool) TransactionRepository {
 	return &transactionRepository{
 		pool: pool,
@@ -29,7 +19,7 @@ func NewTransactionRepository(pool *pgxpool.Pool) TransactionRepository {
 }
 
 func (tr *transactionRepository) Create(ctx context.Context, t domain.Transaction) (int, error) {
-	q := tr.querier(ctx)
+	q := querier(ctx, tr.pool)
 
 	var id int
 
@@ -45,7 +35,7 @@ func (tr *transactionRepository) Create(ctx context.Context, t domain.Transactio
 }
 
 func (tr *transactionRepository) MarkTransaction(ctx context.Context, status string, status_message string, id int) error {
-	q := tr.querier(ctx)
+	q := querier(ctx, tr.pool)
 
 	commandTag, err := q.Exec(ctx, `update transactions set status = $1, status_message = $2 where id = $3`, status, status_message, id)
 
