@@ -34,5 +34,5 @@ type AccountService interface {
 }
 
 type DepositService interface {
-	Create() error
+	Create(ctx context.Context, req dto.CreateDepositRequest, id int) error
 }
