@@ -36,3 +36,7 @@ type AccountService interface {
 type DepositService interface {
 	Create(ctx context.Context, req dto.CreateDepositRequest, id int) error
 }
+
+type WithdrawalService interface {
+	Create(ctx context.Context, req dto.CreateWindrawalRequest) error
+}

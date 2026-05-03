@@ -58,3 +58,7 @@ type TransactionRepository interface {
 type DepositRepository interface {
 	Create(ctx context.Context, d domain.Deposit) error
 }
+
+type WithdrawalRepository interface {
+	Create(ctx context.Context, w domain.Withdrawal) error
+}
