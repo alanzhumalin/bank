@@ -27,3 +27,9 @@ var (
 	ErrorUserIdRequired = errors.New("User id is required")
 	CurrencyIdRequired  = errors.New("Currency id is required")
 )
+
+var (
+	ErrorTransactionIdRequired = errors.New("Transaction id is required")
+	ErrorAccountIdRequired     = errors.New("Account id is required")
+	ErrorSourceRequired        = errors.New("Source is required")
+)
