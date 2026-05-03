@@ -76,7 +76,7 @@ func (a *accountRepository) GetByIdForUpdate(ctx context.Context, id int) (domai
 
 	var account domain.Account
 
-	err := q.QueryRow(ctx, `select id, user_id, currency_id, balance, is_active, created_at from accounts where id = $1 for update`, id).Scan(&account.Id, &account.UserId, &account.CurrencyId, &account.Balance, &account.IsActive)
+	err := q.QueryRow(ctx, `select id, user_id, currency_id, balance, is_active, created_at from accounts where id = $1 for update`, id).Scan(&account.Id, &account.UserId, &account.CurrencyId, &account.Balance, &account.IsActive, &account.CreatedAt)
 
 	if err == nil {
 		return account, nil
