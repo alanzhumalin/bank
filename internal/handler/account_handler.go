@@ -22,6 +22,14 @@ func NewAccountHandler(service service.AccountService, logger zerolog.Logger) *a
 	}
 }
 
+func AccountRouter(accountHandler *accountHandler) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /", accountHandler.Create)
+	mux.HandleFunc("DELETE /{account_id}", accountHandler.DeleteByID)
+	mux.HandleFunc("GET /", accountHandler.GetAll)
+	return mux
+}
+
 func (a *accountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateAccountRequest
 
