@@ -2,8 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/rs/zerolog"
@@ -41,8 +43,14 @@ func (t *transferHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	err = t.service.Create(r.Context(), req)
 	if err != nil {
-		t.logger.Error().Err(err).Msg("Error in creating transfer")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		switch {
+		case errors.Is(err, domain.ErrorNotEnoughBalance):
+			WriteError(w, http.StatusOK, err.Error())
+		default:
+			t.logger.Error().Err(err).Msg("Error in creating transfer")
+			WriteError(w, http.StatusInternalServerError, "internal server error")
+		}
+
 		return
 	}
 	t.logger.Info().Msg("Created transfer")
