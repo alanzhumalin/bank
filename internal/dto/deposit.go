@@ -1,7 +1,8 @@
 package dto
 
+import "github.com/shopspring/decimal"
+
 type CreateDepositRequest struct {
-	AccountId int    `json:"account_id"`
-	Amount    int    `json:"amount"`
-	Source    string `json:"source"`
+	Amount decimal.Decimal `json:"amount"`
+	Source string          `json:"source"`
 }
