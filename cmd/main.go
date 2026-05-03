@@ -59,17 +59,17 @@ func main() {
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
 	accountHandler := handler.NewAccountHandler(accountService, logger)
-	accountRouter := handler.AccountRouter(accountHandler)
 
 	transferRepository := repository.NewTransferRepository(pool)
 	transferService := service.NewTransferService(transferRepository, txManager, accountRepository, transactionRepository)
 	transferHandler := handler.NewTransferHandler(transferService, logger)
 	transferRouter := handler.TransferRouter(transferHandler)
 
-	// depositRepository := repository.NewDepositRepository(pool)
-	// depositService := service.NewDepositService(depositRepository, accountRepository, txManager, transactionRepository)
-	// depositHandler := handler.NewDepositHandler(depositService, logger)
-	// depositRouter := handler.DepositRouter(depositHandler)
+	depositRepository := repository.NewDepositRepository(pool)
+	depositService := service.NewDepositService(depositRepository, accountRepository, txManager, transactionRepository)
+	depositHandler := handler.NewDepositHandler(depositService, logger)
+
+	accountRouter := handler.AccountRouter(accountHandler, depositHandler)
 
 	root := http.NewServeMux()
 
