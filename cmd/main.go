@@ -59,6 +59,7 @@ func main() {
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
 	accountHandler := handler.NewAccountHandler(accountService, logger)
+	accountRouter := handler.AccountRouter(accountHandler)
 
 	transferRepository := repository.NewTransferRepository(pool)
 	transferService := service.NewTransferService(transferRepository, txManager, accountRepository, transactionRepository)
