@@ -66,10 +66,10 @@ func main() {
 	transferHandler := handler.NewTransferHandler(transferService, logger)
 	transferRouter := handler.TransferRouter(transferHandler)
 
-	// depositRepository := repository.NewDepositRepository(pool)
-	// depositService := service.NewDepositService(depositRepository, accountRepository, txManager, transactionRepository)
-	// depositHandler := handler.NewDepositHandler(depositService, logger)
-	// depositRouter := handler.DepositRouter(depositHandler)
+	withdrawalRepository := repository.NewWithdrawalRepository(pool)
+	withdrawalService := service.NewWithdrawalService(withdrawalRepository, txManager, accountRepository, transactionRepository)
+	withdrawalHandler := handler.NewWithDrawalHandler(withdrawalService, logger)
+	withdrawalRouter := handler.WithdrawalRouter(withdrawalHandler)
 
 	root := http.NewServeMux()
 
@@ -77,6 +77,7 @@ func main() {
 	root.Handle("/currency/", http.StripPrefix("/currency", currencyRouter))
 	root.Handle("/transfer/", http.StripPrefix("/transfer", transferRouter))
 	root.Handle("/account/", http.StripPrefix("/account", accountRouter))
+	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
 
 	srv := http.Server{
 		Addr:    ":8081",

@@ -1,0 +1,54 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/rs/zerolog"
+)
+
+type withdrawalHandler struct {
+	service service.WithdrawalService
+	logger  zerolog.Logger
+}
+
+func NewWithDrawalHandler(service service.WithdrawalService, logger zerolog.Logger) *withdrawalHandler {
+	return &withdrawalHandler{service: service, logger: logger.With().Str("component", "withdrawal_handler").Logger()}
+}
+
+func WithdrawalRouter(w *withdrawalHandler) http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /", w.Create)
+
+	return mux
+}
+
+func (wh *withdrawalHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateWindrawalRequest
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "invalid json")
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err = wh.service.Create(r.Context(), req); err != nil {
+		wh.logger.Error().Err(err).Msg("Error in create withdrawal")
+		WriteError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	wh.logger.Info().Str("account_id", strconv.Itoa(req.AccountId)).Str("amount", req.Amount.String()).Msg("Created withdraw")
+	WriteJson(w, http.StatusCreated, "created")
+
+}
