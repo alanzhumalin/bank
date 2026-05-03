@@ -135,7 +135,7 @@ func (a *accountRepository) DeleteById(ctx context.Context, id int) error {
 }
 
 func (a *accountRepository) GetAll(ctx context.Context) ([]domain.Account, error) {
-	rows, err := a.pool.Query(ctx, `select id, user_id, currency_id, balance,is_active, created_at from accouns`)
+	rows, err := a.pool.Query(ctx, `select id, user_id, currency_id, balance,is_active, created_at from accounts`)
 
 	if err != nil {
 		return []domain.Account{}, fmt.Errorf("Error in getting all accounts: %w", err)
