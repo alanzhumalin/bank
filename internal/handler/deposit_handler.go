@@ -22,6 +22,14 @@ func NewDepositHandler(s service.DepositService, l zerolog.Logger) *depositHandl
 	return &depositHandler{service: s, logger: l.With().Str("component", "deposit_handler").Logger()}
 }
 
+func DepositRouter(depositHandler *depositHandler) http.Handler {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /{account_id}", depositHandler.Create)
+
+	return mux
+}
+
 func (d *depositHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateDepositRequest
 
