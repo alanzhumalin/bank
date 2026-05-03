@@ -19,16 +19,6 @@ func NewAccountRepository(pool *pgxpool.Pool) AccountRepository {
 	return &accountRepository{pool: pool}
 }
 
-func (a *accountRepository) querier(ctx context.Context) Querier {
-	tx, ok := GetTx(ctx)
-
-	if !ok {
-		return a.pool
-	}
-
-	return tx
-}
-
 func (a *accountRepository) Create(ctx context.Context, acc domain.Account) error {
 	_, err := a.pool.Exec(ctx, `insert into accounts(user_id, currency_id) values($1,$2)`, acc.UserId, acc.CurrencyId)
 
@@ -40,7 +30,7 @@ func (a *accountRepository) Create(ctx context.Context, acc domain.Account) erro
 }
 
 func (a *accountRepository) SelectTwoAccountsForUpdate(ctx context.Context, senderAccountId int, receiverAccountId int) (domain.Account, domain.Account, error) {
-	q := a.querier(ctx)
+	q := querier(ctx, a.pool)
 
 	rows, err := q.Query(ctx, `select id, currency_id, balance, is_active from accounts where id = ANY($1) order by id for update`, []int{senderAccountId, receiverAccountId})
 
@@ -82,7 +72,7 @@ func (a *accountRepository) SelectTwoAccountsForUpdate(ctx context.Context, send
 }
 
 func (a *accountRepository) GetByIdForUpdate(ctx context.Context, id int) (domain.Account, error) {
-	q := a.querier(ctx)
+	q := querier(ctx, a.pool)
 
 	var account domain.Account
 
@@ -101,7 +91,7 @@ func (a *accountRepository) GetByIdForUpdate(ctx context.Context, id int) (domai
 }
 
 func (a *accountRepository) IncreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error {
-	q := a.querier(ctx)
+	q := querier(ctx, a.pool)
 
 	commandTag, err := q.Exec(ctx, `update accounts set balance = balance + $1 where id = $2`, balance, accountId)
 
@@ -116,7 +106,7 @@ func (a *accountRepository) IncreaseBalance(ctx context.Context, balance decimal
 }
 
 func (a *accountRepository) DecreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error {
-	q := a.querier(ctx)
+	q := querier(ctx, a.pool)
 
 	commandTag, err := q.Exec(ctx, `update accounts set balance = balance - $1 where id = $2`, balance, accountId)
 
