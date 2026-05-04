@@ -21,7 +21,7 @@ func NewTransferService(transferRepo repository.TransferRepository, txManager re
 
 func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequest) error {
 
-	err := t.txManager.WithTx(ctx, func(ctx context.Context) error {
+	return t.txManager.WithTx(ctx, func(ctx context.Context) error {
 		acc1, acc2, err := t.accountRepo.SelectTwoAccountsForUpdate(ctx, req.SenderAccountId, req.ReceiverAccountId)
 
 		if err != nil {
@@ -61,22 +61,26 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 			return err
 		}
 
-		err = t.accountRepo.DecreaseBalance(ctx, req.Amount, acc1.Id)
-
-		if err != nil {
-
+		if err = t.accountRepo.DecreaseBalance(ctx, req.Amount, acc1.Id); err != nil {
 			return err
 		}
 
-		err = t.accountRepo.IncreaseBalance(ctx, req.Amount, acc2.Id)
+		if err = t.accountRepo.IncreaseBalance(ctx, req.Amount, acc2.Id); err != nil {
+			return err
 
-		if err != nil {
+		}
+
+		if err = t.transferRepo.Create(ctx, domain.Transfer{
+			TransactionId:     id,
+			SenderAccountId:   req.SenderAccountId,
+			ReceiverAccountId: req.ReceiverAccountId,
+			CurrencyId:        req.CurrencyId,
+			Amount:            req.Amount,
+		}); err != nil {
 			return err
 		}
 
-		err = t.transactionRepo.MarkTransaction(ctx, "completed", "transaction successfuly completed", id)
-
-		if err != nil {
+		if err = t.transactionRepo.MarkTransaction(ctx, "completed", "transaction successfuly completed", id); err != nil {
 			return err
 		}
 
@@ -84,5 +88,4 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 
 	})
 
-	return err
 }
