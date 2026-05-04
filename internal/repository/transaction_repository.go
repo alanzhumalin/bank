@@ -18,22 +18,26 @@ func NewTransactionRepository(pool *pgxpool.Pool) TransactionRepository {
 	}
 }
 
-func (tr *transactionRepository) Create(ctx context.Context, t ...domain.Transaction) ([]int, error) {
+func (tr *transactionRepository) Create(ctx context.Context, t ...domain.Transaction) (map[int]int, error) {
 	q := querier(ctx, tr.pool)
 
-	var id []int
+	mp := make(map[int]int, len(t))
 
 	for _, val := range t {
+		var transactionId int
 		err := q.QueryRow(ctx, `insert into 
 	transactions(type, amount, account_id, status, status_message) 
-	values ($1,$2,$3,$4,$5) returning id`, val.Type, val.Amount, val.AccountId, val.Status, val.StatusMessage).Scan(&id)
+	values ($1,$2,$3,$4,$5) returning id`, val.Type, val.Amount, val.AccountId, val.Status, val.StatusMessage).Scan(&transactionId)
 
 		if err != nil {
-			return []int{}, fmt.Errorf("Error occured while creating new transfer")
+			return map[int]int{}, fmt.Errorf("Error occured while creating new transfer")
 		}
+
+		mp[val.AccountId] = transactionId
+
 	}
 
-	return id, nil
+	return mp, nil
 }
 
 func (tr *transactionRepository) MarkTransaction(ctx context.Context, status string, status_message string, id int) error {
