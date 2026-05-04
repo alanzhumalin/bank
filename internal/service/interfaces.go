@@ -40,3 +40,8 @@ type DepositService interface {
 type WithdrawalService interface {
 	Create(ctx context.Context, req dto.CreateWindrawalRequest) error
 }
+
+type TransactionService interface {
+	GetByAccountId(ctx context.Context, id int)
+	GetAll(ctx context.Context)
+}
