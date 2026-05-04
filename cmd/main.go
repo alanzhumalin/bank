@@ -81,7 +81,7 @@ func main() {
 	root.Handle("/users/", http.StripPrefix("/users", userRouter))
 	root.Handle("/currencies/", http.StripPrefix("/currency", currencyRouter))
 	root.Handle("/transfers/", http.StripPrefix("/transfer", transferRouter))
-	root.Handle("/accounts/", http.StripPrefix("/account", accountRouter))
+	root.Handle("/accounts/", http.StripPrefix("/accounts", accountRouter))
 	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
 	root.Handle("/deposits/", http.StripPrefix("/deposit", depositRouter))
 
