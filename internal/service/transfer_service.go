@@ -47,15 +47,22 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 			return domain.ErrorNotEnoughBalance
 		}
 
-		trans := domain.Transaction{
+		transaction1 := domain.Transaction{
 			Type:          "transfer",
 			Amount:        req.Amount,
 			AccountId:     req.SenderAccountId,
 			Status:        "pending",
 			StatusMessage: "transaction started",
 		}
+		transaction2 := domain.Transaction{
+			Type:          "transfer",
+			Amount:        req.Amount,
+			AccountId:     req.ReceiverAccountId,
+			Status:        "pending",
+			StatusMessage: "transaction started",
+		}
 
-		id, err := t.transactionRepo.Create(ctx, trans)
+		mp, err := t.transactionRepo.Create(ctx, transaction1, transaction2)
 
 		if err != nil {
 			return err
@@ -70,18 +77,22 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 
 		}
 
-		if err = t.transferRepo.Create(ctx, domain.Transfer{
-			TransactionId:     id,
+		transfer := domain.Transfer{
+			TransactionId:     mp[req.SenderAccountId],
 			SenderAccountId:   req.SenderAccountId,
 			ReceiverAccountId: req.ReceiverAccountId,
 			CurrencyId:        req.CurrencyId,
 			Amount:            req.Amount,
-		}); err != nil {
+		}
+
+		if err = t.transferRepo.Create(ctx, transfer); err != nil {
 			return err
 		}
 
-		if err = t.transactionRepo.MarkTransaction(ctx, "completed", "transaction successfuly completed", id); err != nil {
-			return err
+		for _, val := range mp {
+			if err = t.transactionRepo.MarkTransaction(ctx, "completed", "transaction successfuly completed", val); err != nil {
+				return err
+			}
 		}
 
 		return nil
