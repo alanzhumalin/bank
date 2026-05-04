@@ -42,6 +42,6 @@ type WithdrawalService interface {
 }
 
 type TransactionService interface {
-	GetByAccountId(ctx context.Context, id int)
-	GetAll(ctx context.Context)
+	GetByAccountId(ctx context.Context, id int) ([]dto.TransactionResponse, error)
+	GetAll(ctx context.Context) ([]dto.TransactionResponse, error)
 }
