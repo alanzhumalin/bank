@@ -35,7 +35,7 @@ func (w *withdrawalService) Create(ctx context.Context, req dto.CreateWindrawalR
 			return domain.ErrorNotEnoughBalance
 		}
 
-		transactionId, err := w.transactionRepo.Create(ctx, domain.Transaction{
+		mp, err := w.transactionRepo.Create(ctx, domain.Transaction{
 			Type:          "withdraw",
 			Amount:        req.Amount,
 			AccountId:     req.AccountId,
@@ -52,7 +52,7 @@ func (w *withdrawalService) Create(ctx context.Context, req dto.CreateWindrawalR
 		}
 
 		if err = w.withdrawalRepo.Create(ctx, domain.Withdrawal{
-			TransactionId: transactionId,
+			TransactionId: mp[req.AccountId],
 			AccountId:     req.AccountId,
 			Amount:        req.Amount,
 			Source:        req.Source,
@@ -60,7 +60,7 @@ func (w *withdrawalService) Create(ctx context.Context, req dto.CreateWindrawalR
 			return err
 		}
 
-		if err = w.transactionRepo.MarkTransaction(ctx, "completed", "Withdraw transaction completed", transactionId); err != nil {
+		if err = w.transactionRepo.MarkTransaction(ctx, "completed", "Withdraw transaction completed", mp[req.AccountId]); err != nil {
 			return err
 		}
 
