@@ -55,6 +55,9 @@ func main() {
 	currencyRouter := handler.CurrencyRouter(currencyHandler)
 
 	transactionRepository := repository.NewTransactionRepository(pool)
+	transactionService := service.NewTransactionService(transactionRepository)
+	transactionHandler := handler.NewTransactionHandler(transactionService, logger)
+	transactionRouter := handler.TransactionRouter(transactionHandler)
 
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
@@ -84,6 +87,7 @@ func main() {
 	root.Handle("/accounts/", http.StripPrefix("/accounts", accountRouter))
 	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
 	root.Handle("/deposits/", http.StripPrefix("/deposits", depositRouter))
+	root.Handle("/transactions/", http.StripPrefix("/transactions", transactionRouter))
 
 	srv := http.Server{
 		Addr:    ":8081",

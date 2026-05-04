@@ -37,7 +37,7 @@ func (ds *depositService) Create(ctx context.Context, req dto.CreateDepositReque
 			return domain.AccountIsNotActive
 		}
 
-		transactionId, err := ds.transactionRepo.Create(ctx, domain.Transaction{
+		mp, err := ds.transactionRepo.Create(ctx, domain.Transaction{
 			Type:          "deposit",
 			Amount:        req.Amount,
 			AccountId:     id,
@@ -49,26 +49,20 @@ func (ds *depositService) Create(ctx context.Context, req dto.CreateDepositReque
 			return err
 		}
 
-		err = ds.accountRepo.IncreaseBalance(ctx, req.Amount, id)
-
-		if err != nil {
+		if err = ds.accountRepo.IncreaseBalance(ctx, req.Amount, id); err != nil {
 			return err
 		}
 
-		err = ds.depositRepo.Create(ctx, domain.Deposit{
-			TransactionId: transactionId,
+		if err = ds.depositRepo.Create(ctx, domain.Deposit{
+			TransactionId: mp[id],
 			AccountId:     id,
 			Amount:        req.Amount,
 			Source:        req.Source,
-		})
-
-		if err != nil {
+		}); err != nil {
 			return err
 		}
 
-		err = ds.transactionRepo.MarkTransaction(ctx, "completed", "transaction completed", transactionId)
-
-		if err != nil {
+		if err = ds.transactionRepo.MarkTransaction(ctx, "completed", "transaction completed", mp[id]); err != nil {
 			return err
 		}
 
