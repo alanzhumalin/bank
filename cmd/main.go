@@ -82,7 +82,7 @@ func main() {
 	root := http.NewServeMux()
 
 	root.Handle("/users/", http.StripPrefix("/users", userRouter))
-	root.Handle("/currencies/", http.StripPrefix("/currency", currencyRouter))
+	root.Handle("/currencies/", http.StripPrefix("/currencies", currencyRouter))
 	root.Handle("/transfers/", http.StripPrefix("/transfers", transferRouter))
 	root.Handle("/accounts/", http.StripPrefix("/accounts", accountRouter))
 	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
