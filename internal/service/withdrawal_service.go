@@ -45,9 +45,7 @@ func (w *withdrawalService) Create(ctx context.Context, req dto.CreateWindrawalR
 			return err
 		}
 
-		err = w.accountRepo.DecreaseBalance(ctx, req.Amount, req.AccountId)
-
-		if err != nil {
+		if err = w.accountRepo.DecreaseBalance(ctx, req.Amount, req.AccountId); err != nil {
 			return err
 		}
 
