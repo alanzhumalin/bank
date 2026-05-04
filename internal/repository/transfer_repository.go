@@ -25,13 +25,15 @@ func NewTransferRepository(pool *pgxpool.Pool) TransferRepository {
 //     amount numeric(12,2) not null check (amount > 0)
 // );
 
-func (tr *transferRepository) Create(ctx context.Context, t domain.Transfer) error {
+func (tr *transferRepository) Create(ctx context.Context, t ...domain.Transfer) error {
 	q := querier(ctx, tr.pool)
 
-	_, err := q.Exec(ctx, `insert into transfers(transaction_id, sender_account_id, receiver_account_id, currency_id, amount) values($1, $2,$3,$4,$5)`, t.TransactionId, t.SenderAccountId, t.ReceiverAccountId, t.CurrencyId, t.Amount)
+	for _, val := range t {
+		_, err := q.Exec(ctx, `insert into transfers(transaction_id, sender_account_id, receiver_account_id, currency_id, amount) values($1, $2,$3,$4,$5)`, val.TransactionId, val.SenderAccountId, val.ReceiverAccountId, val.CurrencyId, val.Amount)
 
-	if err != nil {
-		return fmt.Errorf("Error in creating transfer: %w", err)
+		if err != nil {
+			return fmt.Errorf("Error in creating transfer: %w", err)
+		}
 	}
 	return nil
 }
