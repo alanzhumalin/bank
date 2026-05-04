@@ -83,7 +83,7 @@ func main() {
 	root.Handle("/transfer/", http.StripPrefix("/transfer", transferRouter))
 	root.Handle("/account/", http.StripPrefix("/account", accountRouter))
 	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
-	root.Handle("/deposit/", http.StripPrefix("/deposit", depositRouter))
+	root.Handle("/deposits/", http.StripPrefix("/deposits", depositRouter))
 
 	srv := http.Server{
 		Addr:    ":8081",
