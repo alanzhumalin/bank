@@ -29,6 +29,7 @@ type CurrencyRepository interface {
 }
 
 type TransferRepository interface {
+	Create(ctx context.Context, t domain.Transfer) error
 }
 
 type AccountRepository interface {
