@@ -22,11 +22,11 @@ func NewAccountHandler(service service.AccountService, logger zerolog.Logger) *a
 	}
 }
 
-func AccountRouter(a *accountHandler) http.Handler {
+func AccountRouter(accountHandler *accountHandler) http.Handler {
 	mux := http.NewServeMux()
-
-	mux.HandleFunc("POST /", a.Create)
-
+	mux.HandleFunc("POST /", accountHandler.Create)
+	mux.HandleFunc("DELETE /{account_id}", accountHandler.DeleteByID)
+	mux.HandleFunc("GET /", accountHandler.GetAll)
 	return mux
 }
 
@@ -58,7 +58,7 @@ func (a *accountHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *accountHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
-	pathId := r.PathValue("id")
+	pathId := r.PathValue("account_id")
 
 	if pathId == "" {
 		WriteError(w, http.StatusBadRequest, "id is required")
