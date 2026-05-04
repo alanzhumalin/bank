@@ -50,3 +50,67 @@ func (tr *transactionRepository) MarkTransaction(ctx context.Context, status str
 	return nil
 
 }
+
+// create table if not exists transactions(
+//     id BIGINT generated always as identity PRIMARY KEY,
+//     type transaction_type not null,
+//     amount numeric(12,2) not null check (amount >0),
+//     account_id BIGINT not null REFERENCES accounts(id),
+//     status transaction_status not null DEFAULT 'pending',
+//     status_message text not null,
+//     created_at TIMESTAMPtz not null DEFAULT now()
+// );
+
+func (tr *transactionRepository) GetByAccountId(ctx context.Context, id int) ([]domain.Transaction, error) {
+	rows, err := tr.pool.Query(ctx, `select id, type, amount, account_id, status, status_message, created_at from transactions where account_id = $1`, id)
+
+	if err != nil {
+		return []domain.Transaction{}, fmt.Errorf("Error in get transactions by id: %w", err)
+	}
+
+	sl := make([]domain.Transaction, 0)
+
+	for rows.Next() {
+		var t domain.Transaction
+		err := rows.Scan(&t.Id, &t.Type, &t.Amount, &t.AccountId, &t.Status, &t.StatusMessage, &t.CreatedAt)
+		if err != nil {
+			return []domain.Transaction{}, fmt.Errorf("Error in a loop get transactions by id: %w", err)
+		}
+		sl = append(sl, t)
+	}
+
+	rows.Close()
+
+	if err := rows.Err(); err != nil {
+		return []domain.Transaction{}, fmt.Errorf("Error in a row get transactions by id: %w", err)
+	}
+
+	return sl, nil
+}
+
+func (tr *transactionRepository) GetAll(ctx context.Context) ([]domain.Transaction, error) {
+	rows, err := tr.pool.Query(ctx, `select id, type, amount, account_id, status, status_message, created_at from transactions`)
+
+	if err != nil {
+		return []domain.Transaction{}, fmt.Errorf("Error in get transactions by id: %w", err)
+	}
+
+	sl := make([]domain.Transaction, 0)
+
+	for rows.Next() {
+		var t domain.Transaction
+		err := rows.Scan(&t.Id, &t.Type, &t.Amount, &t.AccountId, &t.Status, &t.StatusMessage, &t.CreatedAt)
+		if err != nil {
+			return []domain.Transaction{}, fmt.Errorf("Error in a loop get transactions by id: %w", err)
+		}
+		sl = append(sl, t)
+	}
+
+	rows.Close()
+
+	if err := rows.Err(); err != nil {
+		return []domain.Transaction{}, fmt.Errorf("Error in a row get transactions by id: %w", err)
+	}
+
+	return sl, nil
+}
