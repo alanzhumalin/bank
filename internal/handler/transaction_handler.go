@@ -23,8 +23,8 @@ func NewTransactionHandler(service service.TransactionService, logger zerolog.Lo
 func TransactionRouter(th *transactionHandler) http.Handler {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("GET /", th.GetAll)
 	mux.HandleFunc("GET /{account_id}", th.GetByAccountId)
-	mux.HandleFunc("GET /", th.GetByAccountId)
 
 	return mux
 }
