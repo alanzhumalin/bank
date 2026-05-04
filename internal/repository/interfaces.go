@@ -29,7 +29,7 @@ type CurrencyRepository interface {
 }
 
 type TransferRepository interface {
-	Create(ctx context.Context, t domain.Transfer) error
+	Create(ctx context.Context, t ...domain.Transfer) error
 }
 
 type AccountRepository interface {
@@ -52,7 +52,7 @@ type Querier interface {
 }
 
 type TransactionRepository interface {
-	Create(ctx context.Context, t ...domain.Transaction) ([]int, error)
+	Create(ctx context.Context, t ...domain.Transaction) (map[int]int, error)
 	MarkTransaction(ctx context.Context, status string, status_message string, id int) error
 	GetByAccountId(ctx context.Context, id int) ([]domain.Transaction, error)
 	GetAll(ctx context.Context) ([]domain.Transaction, error)
