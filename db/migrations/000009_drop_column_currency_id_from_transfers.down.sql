@@ -1,0 +1,1 @@
+alter table transfers add column currency_id bigint not null references currencies(id);
