@@ -29,7 +29,7 @@ func (tr *transferRepository) Create(ctx context.Context, t ...domain.Transfer) 
 	q := querier(ctx, tr.pool)
 
 	for _, val := range t {
-		_, err := q.Exec(ctx, `insert into transfers(transaction_id, sender_account_id, receiver_account_id, currency_id, amount) values($1, $2,$3,$4,$5)`, val.TransactionId, val.SenderAccountId, val.ReceiverAccountId, val.CurrencyId, val.Amount)
+		_, err := q.Exec(ctx, `insert into transfers(transaction_id, sender_account_id, receiver_account_id, amount) values($1, $2,$3,$4)`, val.TransactionId, val.SenderAccountId, val.ReceiverAccountId, val.Amount)
 
 		if err != nil {
 			return fmt.Errorf("Error in creating transfer: %w", err)
