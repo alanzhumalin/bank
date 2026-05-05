@@ -42,6 +42,7 @@ func (ds *depositService) Create(ctx context.Context, req dto.CreateDepositReque
 			Amount:        req.Amount,
 			AccountId:     id,
 			Status:        "pending",
+			CurrencyId:    acc.CurrencyId,
 			StatusMessage: "transaction created",
 		})
 
