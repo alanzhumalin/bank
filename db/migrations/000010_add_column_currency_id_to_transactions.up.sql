@@ -1,0 +1,1 @@
+alter table transactions add column currency_id bigint not null default 1 REFERENCES currencies(id);
