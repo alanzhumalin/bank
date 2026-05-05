@@ -124,7 +124,7 @@ func (tr *transactionRepository) GetByAccountId(ctx context.Context, id int) ([]
 		)
 
 		if err := rows.Scan(&t.Id, &t.Type, &t.Amount, &t.AccountId, &t.CurrencyId, &t.Status, &t.StatusMessage, &t.CreatedAt,
-			&withdrawalDetailSource, &depositDetailSource,
+			&depositDetailSource, &withdrawalDetailSource,
 			&t.CurrencyCode, &t.CurrencySymbol,
 			&senderFirstName, &senderLastName, &senderPhoneNumber,
 			&receiverFirstName, &receiverLastName, &receiverPhoneNumber,
