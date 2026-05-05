@@ -30,7 +30,7 @@ func (tr *transactionRepository) Create(ctx context.Context, t ...domain.Transac
 	values ($1,$2,$3,$4,$5, $6) returning id`, val.Type, val.Amount, val.AccountId, val.Status, val.StatusMessage, val.CurrencyId).Scan(&transactionId)
 
 		if err != nil {
-			return map[int]int{}, fmt.Errorf("Error occured while creating new transfer")
+			return map[int]int{}, fmt.Errorf("Error occured while creating new transfer: %w", err)
 		}
 
 		mp[val.AccountId] = transactionId
@@ -80,13 +80,13 @@ func (tr *transactionRepository) GetByAccountId(ctx context.Context, id int) ([]
 		c.code as currency_code,
 		c.symbol as currency_symbol,
 
-		a.firstname as sender_firstname
-		a.lastname as sender_lastname
-		a.phone_number as sender_phone_number
+		au.firstname as sender_firstname,
+		au.lastname as sender_lastname,
+		au.phone_number as sender_phone_number,
 
-		b.firstname as receiver_firstname
-		b.lastname as receiver_lastname
-		b.phone_number as receiver_phone_number
+		bu.firstname as receiver_firstname,
+		bu.lastname as receiver_lastname,
+		bu.phone_number as receiver_phone_number
 
 		from transactions tr 
 		left join deposits d on d.transaction_id = tr.id 
@@ -94,8 +94,8 @@ func (tr *transactionRepository) GetByAccountId(ctx context.Context, id int) ([]
 		left join transfers t on t.transaction_id = tr.id
 		left join accounts a on a.id = t.sender_account_id
 		left join accounts b on b.id = t.receiver_account_id
-		left join users u on u.id = a.user_id
-		left join users u on u.id = b.user_id
+		left join users au on au.id = a.user_id
+		left join users bu on bu.id = b.user_id
 		left join currencies c on c.id = tr.currency_id
 
 		where tr.account_id = $1
@@ -110,13 +110,58 @@ func (tr *transactionRepository) GetByAccountId(ctx context.Context, id int) ([]
 
 	for rows.Next() {
 		var t domain.Transaction
+		var (
+			withdrawalDetailSource *string
+			depositDetailSource    *string
+
+			senderFirstName   *string
+			senderLastName    *string
+			senderPhoneNumber *string
+
+			receiverFirstName   *string
+			receiverLastName    *string
+			receiverPhoneNumber *string
+		)
+
 		if err := rows.Scan(&t.Id, &t.Type, &t.Amount, &t.AccountId, &t.CurrencyId, &t.Status, &t.StatusMessage, &t.CreatedAt,
-			&t.DepositDetail.Source, &t.WithDrawalDetail.Source,
+			&withdrawalDetailSource, &depositDetailSource,
 			&t.CurrencyCode, &t.CurrencySymbol,
-			&t.TransferDetail.Sender.FirstName, &t.TransferDetail.Sender.LastName, &t.TransferDetail.Sender.PhoneNumber,
-			&t.TransferDetail.Receiver.FirstName, &t.TransferDetail.Receiver.LastName, &t.TransferDetail.Receiver.FirstName, &t.TransferDetail.Receiver.PhoneNumber,
+			&senderFirstName, &senderLastName, &senderPhoneNumber,
+			&receiverFirstName, &receiverLastName, &receiverPhoneNumber,
 		); err != nil {
 			return []domain.Transaction{}, fmt.Errorf("Error in a loop get transactions by id: %w", err)
+		}
+		// 'transfer', 'deposit','withdraw'
+
+		switch t.Type {
+		case "transfer":
+			if senderFirstName != nil {
+				t.TransferDetail = &domain.TransferDetail{
+					Sender: domain.UserDetail{
+						FirstName:   *senderFirstName,
+						LastName:    *senderLastName,
+						PhoneNumber: *senderPhoneNumber,
+					},
+					Receiver: domain.UserDetail{
+						FirstName:   *receiverFirstName,
+						LastName:    *receiverLastName,
+						PhoneNumber: *receiverPhoneNumber,
+					},
+				}
+			}
+		case "deposit":
+			if depositDetailSource != nil {
+				t.DepositDetail = &domain.DepositDetail{
+					Source: *depositDetailSource,
+				}
+			}
+
+		case "withdraw":
+			if withdrawalDetailSource != nil {
+				t.WithDrawalDetail = &domain.WithdrawalDetail{
+					Source: *withdrawalDetailSource,
+				}
+			}
 		}
 		sl = append(sl, t)
 	}
@@ -144,13 +189,13 @@ func (tr *transactionRepository) GetAll(ctx context.Context) ([]domain.Transacti
 		c.code as currency_code,
 		c.symbol as currency_symbol,
 
-		a.firstname as sender_firstname
-		a.lastname as sender_lastname
-		a.phone_number as sender_phone_number
+		au.firstname as sender_firstname,
+		au.lastname as sender_lastname,
+		au.phone_number as sender_phone_number,
 
-		b.firstname as receiver_firstname
-		b.lastname as receiver_lastname
-		b.phone_number as receiver_phone_number
+		bu.firstname as receiver_firstname,
+		bu.lastname as receiver_lastname,
+		bu.phone_number as receiver_phone_number
 
 		from transactions tr 
 		left join deposits d on d.transaction_id = tr.id 
@@ -158,11 +203,9 @@ func (tr *transactionRepository) GetAll(ctx context.Context) ([]domain.Transacti
 		left join transfers t on t.transaction_id = tr.id
 		left join accounts a on a.id = t.sender_account_id
 		left join accounts b on b.id = t.receiver_account_id
-		left join users u on u.id = a.user_id
-		left join users u on u.id = b.user_id
+		left join users au on au.id = a.user_id
+		left join users bu on bu.id = b.user_id
 		left join currencies c on c.id = tr.currency_id
-
-
 	`)
 
 	if err != nil {
@@ -173,13 +216,58 @@ func (tr *transactionRepository) GetAll(ctx context.Context) ([]domain.Transacti
 
 	for rows.Next() {
 		var t domain.Transaction
+		var (
+			withdrawalDetailSource *string
+			depositDetailSource    *string
+
+			senderFirstName   *string
+			senderLastName    *string
+			senderPhoneNumber *string
+
+			receiverFirstName   *string
+			receiverLastName    *string
+			receiverPhoneNumber *string
+		)
+
 		if err := rows.Scan(&t.Id, &t.Type, &t.Amount, &t.AccountId, &t.CurrencyId, &t.Status, &t.StatusMessage, &t.CreatedAt,
-			&t.DepositDetail.Source, &t.WithDrawalDetail.Source,
+			&withdrawalDetailSource, &depositDetailSource,
 			&t.CurrencyCode, &t.CurrencySymbol,
-			&t.TransferDetail.Sender.FirstName, &t.TransferDetail.Sender.LastName, &t.TransferDetail.Sender.PhoneNumber,
-			&t.TransferDetail.Receiver.FirstName, &t.TransferDetail.Receiver.LastName, &t.TransferDetail.Receiver.FirstName, &t.TransferDetail.Receiver.PhoneNumber,
+			&senderFirstName, &senderLastName, &senderPhoneNumber,
+			&receiverFirstName, &receiverLastName, &receiverPhoneNumber,
 		); err != nil {
 			return []domain.Transaction{}, fmt.Errorf("Error in a loop get transactions by id: %w", err)
+		}
+		// 'transfer', 'deposit','withdraw'
+
+		switch t.Type {
+		case "transfer":
+			if senderFirstName != nil {
+				t.TransferDetail = &domain.TransferDetail{
+					Sender: domain.UserDetail{
+						FirstName:   *senderFirstName,
+						LastName:    *senderLastName,
+						PhoneNumber: *senderPhoneNumber,
+					},
+					Receiver: domain.UserDetail{
+						FirstName:   *receiverFirstName,
+						LastName:    *receiverLastName,
+						PhoneNumber: *receiverPhoneNumber,
+					},
+				}
+			}
+		case "deposit":
+			if depositDetailSource != nil {
+				t.DepositDetail = &domain.DepositDetail{
+					Source: *depositDetailSource,
+				}
+			}
+
+		case "withdraw":
+			if withdrawalDetailSource != nil {
+				t.WithDrawalDetail = &domain.WithdrawalDetail{
+					Source: *withdrawalDetailSource,
+				}
+			}
 		}
 		sl = append(sl, t)
 	}
