@@ -37,16 +37,16 @@ func (s *userService) GetAll(ctx context.Context) ([]dto.GetUser, error) {
 
 }
 
-func (s *userService) Create(ctx context.Context, req dto.CreateUserRequest) (int, error) {
+func (s *userService) Create(ctx context.Context, req dto.CreateUserRequest) (int, string, error) {
 
 	err := s.repo.UserExists(ctx, req.PhoneNumber)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return 0, fmt.Errorf("Error occured by hashing the password %w", err)
+		return 0, "", fmt.Errorf("Error occured by hashing the password %w", err)
 	}
 	u := domain.User{
 		FirstName:   req.FirstName,
@@ -56,13 +56,13 @@ func (s *userService) Create(ctx context.Context, req dto.CreateUserRequest) (in
 		Password:    string(hashedPassword),
 	}
 
-	id, err := s.repo.Create(ctx, u)
+	id, role, err := s.repo.Create(ctx, u)
 
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 
-	return id, nil
+	return id, role, nil
 }
 
 func (s *userService) Delete(ctx context.Context, id int) error {

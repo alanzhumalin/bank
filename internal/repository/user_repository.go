@@ -87,15 +87,16 @@ func (u *userRepository) UserExists(ctx context.Context, phoneNumber string) err
 	return fmt.Errorf("user existence check: %w", err)
 }
 
-func (u *userRepository) Create(ctx context.Context, user user.User) (int, error) {
+func (u *userRepository) Create(ctx context.Context, user user.User) (int, string, error) {
 	var id int
-	err := u.pool.QueryRow(ctx, `insert into users(firstname, lastname, birthday, phone_number, password) values($1,$2,$3,$4,$5) returning id`, user.FirstName, user.LastName, user.Birthday, user.PhoneNumber, user.Password).Scan(&id)
+	var role string
+	err := u.pool.QueryRow(ctx, `insert into users(firstname, lastname, birthday, phone_number, password) values($1,$2,$3,$4,$5) returning id, role`, user.FirstName, user.LastName, user.Birthday, user.PhoneNumber, user.Password).Scan(&id, &role)
 
 	if err != nil {
-		return 0, fmt.Errorf("user create: %w", err)
+		return 0, "", fmt.Errorf("user create: %w", err)
 	}
 
-	return id, nil
+	return id, role, nil
 }
 
 func (u *userRepository) Delete(ctx context.Context, id int) error {
