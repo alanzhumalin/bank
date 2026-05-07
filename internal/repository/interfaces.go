@@ -11,7 +11,7 @@ import (
 )
 
 type UserRepository interface {
-	Create(ctx context.Context, u user.User) (int, error)
+	Create(ctx context.Context, u user.User) (int, string, error)
 	UserExists(ctx context.Context, phoneNumber string) error
 	Delete(ctx context.Context, id int) error
 	Update(ctx context.Context, user domain.User) error
