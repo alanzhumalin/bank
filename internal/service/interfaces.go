@@ -8,7 +8,7 @@ import (
 )
 
 type UserService interface {
-	Create(ctx context.Context, req dto.CreateUserRequest) (int, error)
+	Create(ctx context.Context, req dto.CreateUserRequest) (int, string, error)
 	Delete(ctx context.Context, id int) error
 	Update(ctx context.Context, user domain.User) error
 	GetByPhone(ctx context.Context, phone string) (dto.GetUser, error)
