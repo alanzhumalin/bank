@@ -14,6 +14,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/db"
 	"github.com/alanzhumalin/bank/internal/handler"
 	"github.com/alanzhumalin/bank/internal/logger"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/repository"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/joho/godotenv"
@@ -83,17 +84,20 @@ func main() {
 	authHandler := handler.NewAuthHandler(userService, authService, logger)
 	authRouter := handler.AuthRouter(authHandler)
 
+	middleware := middleware.NewAuthMiddleWare(&cfg.TokenKey)
+
 	root := http.NewServeMux()
 
 	root.Handle("/auth/", http.StripPrefix("/auth", authRouter))
 
 	root.Handle("/users/", http.StripPrefix("/users", userRouter))
-	root.Handle("/currencies/", http.StripPrefix("/currencies", currencyRouter))
-	root.Handle("/transfers/", http.StripPrefix("/transfers", transferRouter))
-	root.Handle("/accounts/", http.StripPrefix("/accounts", accountRouter))
-	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
 	root.Handle("/deposits/", http.StripPrefix("/deposits", depositRouter))
-	root.Handle("/transactions/", http.StripPrefix("/transactions", transactionRouter))
+
+	root.Handle("/currencies/", http.StripPrefix("/currencies", middleware.Middleware(currencyRouter)))
+	root.Handle("/transfers/", http.StripPrefix("/transfers", middleware.Middleware(transferRouter)))
+	root.Handle("/accounts/", http.StripPrefix("/accounts", middleware.Middleware(accountRouter)))
+	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", middleware.Middleware(withdrawalRouter)))
+	root.Handle("/transactions/", http.StripPrefix("/transactions", middleware.Middleware(transactionRouter)))
 
 	srv := http.Server{
 		Addr:    ":8081",

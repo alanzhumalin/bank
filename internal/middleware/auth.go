@@ -15,24 +15,30 @@ type AuthMiddleware struct {
 	TokenKey *string
 }
 
+func NewAuthMiddleWare(tokenKey *string) *AuthMiddleware {
+	return &AuthMiddleware{
+		TokenKey: tokenKey,
+	}
+}
+
 func (a *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
 
 		if header == "" {
-			handler.WriteJson(w, http.StatusBadRequest, "not authentificated")
+			handler.WriteJson(w, http.StatusUnauthorized, "not authenticated")
 			return
 		}
 
 		parts := strings.Split(header, " ")
 
 		if len(parts) != 2 {
-			handler.WriteJson(w, http.StatusBadRequest, "incorrect authorization header")
+			handler.WriteJson(w, http.StatusUnauthorized, "incorrect authorization header")
 			return
 		}
 
 		if parts[0] != "Bearer" {
-			handler.WriteJson(w, http.StatusBadRequest, "invalid auth type")
+			handler.WriteJson(w, http.StatusUnauthorized, "invalid auth type")
 			return
 		}
 
@@ -43,7 +49,7 @@ func (a *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 			case errors.Is(err, jwt.ErrorNotValidToken):
 				handler.WriteJson(w, http.StatusUnauthorized, err.Error())
 			default:
-				handler.WriteJson(w, http.StatusBadRequest, "Not authorized")
+				handler.WriteJson(w, http.StatusUnauthorized, "Not authorized")
 			}
 
 			return
