@@ -8,6 +8,7 @@ var (
 	ErrorPhoneNumRequired  = errors.New("Phone number is required")
 	ErrorPasswordRequired  = errors.New("Password is required")
 	ErrorPasswordTooShort  = errors.New("Password must be at least 8 characters")
+	ErrorBirthdayRequired  = errors.New("Birthday is required")
 )
 
 var (
@@ -32,4 +33,9 @@ var (
 	ErrorTransactionIdRequired = errors.New("Transaction id is required")
 	ErrorAccountIdRequired     = errors.New("Account id is required")
 	ErrorSourceRequired        = errors.New("Source is required")
+)
+var (
+	SessionIdNotFound = errors.New("Session id not found")
+	UserIdNotFound    = errors.New("User id not found")
+	RoleNotFound      = errors.New("Role not found")
 )
