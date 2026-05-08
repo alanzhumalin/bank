@@ -45,3 +45,11 @@ type TransactionService interface {
 	GetByAccountId(ctx context.Context, id int) ([]dto.TransactionResponse, error)
 	GetAll(ctx context.Context) ([]dto.TransactionResponse, error)
 }
+
+type AuthService interface {
+	Register(ctx context.Context, req dto.RegisterRequest, ip string, device string) (*dto.TokenPair, error)
+	Login(ctx context.Context, req dto.LoginRequest, ip string, device string) (*dto.TokenPair, error)
+	UpdateSession(ctx context.Context, userId int, role string, sessionId string) (*dto.TokenPair, error)
+	LogoutFromAllDevices(ctx context.Context, userId int) error
+	Logout(ctx context.Context, sessionId string) error
+}
