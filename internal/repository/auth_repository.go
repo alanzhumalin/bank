@@ -48,6 +48,25 @@ func (a *authRepository) Сreate(ctx context.Context, session domain.Session) er
 	return nil
 }
 
+func (a *authRepository) GetSessionById(ctx context.Context, sessionId string) (domain.Session, error) {
+
+	q := querier(ctx, a.pool)
+
+	var session domain.Session
+
+	err := q.QueryRow(ctx, `select is_active, hashed_refresh_token, expires_at from sessions where id = $1 for update`, sessionId).Scan(&session.IsActive, &session.HashedRefreshToken, &session.ExpiresAt)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Session{}, domain.ErrorSessionNotFound
+	}
+
+	if err != nil {
+		return domain.Session{}, fmt.Errorf("Error in getting session by id: %w", err)
+	}
+
+	return session, nil
+}
+
 func (a *authRepository) Update(ctx context.Context, newHashedToken string, expires_at time.Time, sessionId string) error {
 	q := querier(ctx, a.pool)
 
