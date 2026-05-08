@@ -150,31 +150,20 @@ func (ah *authHandler) LogoutFromAllDevices(w http.ResponseWriter, r *http.Reque
 }
 
 func (ah *authHandler) Refresh(w http.ResponseWriter, r *http.Request) {
-	sessionId, ok := r.Context().Value(dto.SessionKey{}).(string)
-	if !ok {
-		WriteError(w, http.StatusBadRequest, "bad request")
+
+	var req dto.RefreshRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		WriteError(w, http.StatusBadRequest, "refresh token is required")
 		return
 	}
-	userId, ok := r.Context().Value(dto.UserKey{}).(int)
-	if !ok {
-		WriteError(w, http.StatusBadRequest, "bad request")
-		return
 
-	}
-	role, ok := r.Context().Value(dto.RoleKey{}).(string)
-
-	if !ok {
-		WriteError(w, http.StatusBadRequest, "bad request")
-		return
-
-	}
-
-	token, err := ah.authService.UpdateSession(r.Context(), userId, role, sessionId)
+	token, sessionId, err := ah.authService.UpdateSession(r.Context(), req)
 
 	if err != nil {
 		switch {
 		case errors.Is(err, dto.SessionIdNotFound):
-			WriteError(w, http.StatusBadRequest, "bad request")
+			WriteError(w, http.StatusNotFound, "Session not found")
 
 		default:
 			ah.logger.Error().Err(err).Msg("Error occured in updating the session")
