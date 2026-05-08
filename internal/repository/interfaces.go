@@ -73,4 +73,5 @@ type AuthRepository interface {
 	Revoke(ctx context.Context, sessionId string) error
 	RevokeAllUserDevices(ctx context.Context, id int) error
 	Update(ctx context.Context, newHashedToken string, expires_at time.Time, sessionId string) error
+	GetSessionById(ctx context.Context, sessionId string) (domain.Session, error)
 }
