@@ -73,8 +73,9 @@ func (u *userRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 }
 
 func (u *userRepository) UserExists(ctx context.Context, phoneNumber string) error {
+	q := querier(ctx, u.pool)
 	var num int
-	err := u.pool.QueryRow(ctx, `select id from users where phone_number = $1`, phoneNumber).Scan(&num)
+	err := q.QueryRow(ctx, `select id from users where phone_number = $1`, phoneNumber).Scan(&num)
 
 	if err == nil {
 		return domain.ErrorUserAlreadyExists
@@ -90,9 +91,9 @@ func (u *userRepository) UserExists(ctx context.Context, phoneNumber string) err
 func (u *userRepository) Create(ctx context.Context, user user.User) (int, string, error) {
 	var id int
 	var role string
-	err := u.pool.QueryRow(ctx, `insert into users(firstname, lastname, birthday, phone_number, password) values($1,$2,$3,$4,$5) returning id, role`, user.FirstName, user.LastName, user.Birthday, user.PhoneNumber, user.Password).Scan(&id, &role)
+	q := querier(ctx, u.pool)
 
-	if err != nil {
+	if err := q.QueryRow(ctx, `insert into users(firstname, lastname, birthday, phone_number, password) values($1,$2,$3,$4,$5) returning id, role`, user.FirstName, user.LastName, user.Birthday, user.PhoneNumber, user.Password).Scan(&id, &role); err != nil {
 		return 0, "", fmt.Errorf("user create: %w", err)
 	}
 
@@ -100,7 +101,8 @@ func (u *userRepository) Create(ctx context.Context, user user.User) (int, strin
 }
 
 func (u *userRepository) Delete(ctx context.Context, id int) error {
-	res, err := u.pool.Exec(ctx, `delete from users where id = $1`, id)
+	q := querier(ctx, u.pool)
+	res, err := q.Exec(ctx, `delete from users where id = $1`, id)
 
 	if err != nil {
 		return fmt.Errorf("Error delete user by id: %w", err)
@@ -114,7 +116,8 @@ func (u *userRepository) Delete(ctx context.Context, id int) error {
 }
 
 func (u *userRepository) Update(ctx context.Context, user domain.User) error {
-	res, err := u.pool.Exec(ctx, `update users set firstname = $1, lastname = $2 where id = $3`, user.FirstName, user.LastName, user.Id)
+	q := querier(ctx, u.pool)
+	res, err := q.Exec(ctx, `update users set firstname = $1, lastname = $2 where id = $3`, user.FirstName, user.LastName, user.Id)
 
 	if err != nil {
 		return fmt.Errorf("Error update user: %w", err)
@@ -129,7 +132,8 @@ func (u *userRepository) Update(ctx context.Context, user domain.User) error {
 
 func (u *userRepository) GetByPhone(ctx context.Context, phone string) (domain.User, error) {
 	var user domain.User
-	err := u.pool.QueryRow(ctx, `select * from users where phone_number = $1`, phone).Scan(&user.Id, &user.FirstName, &user.LastName, &user.Birthday, &user.PhoneNumber, &user.Password, &user.CreatedAt, &user.Role)
+	q := querier(ctx, u.pool)
+	err := q.QueryRow(ctx, `select * from users where phone_number = $1`, phone).Scan(&user.Id, &user.FirstName, &user.LastName, &user.Birthday, &user.PhoneNumber, &user.Password, &user.CreatedAt, &user.Role)
 
 	if err == nil {
 		return user, nil
