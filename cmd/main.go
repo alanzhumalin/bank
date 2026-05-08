@@ -25,8 +25,7 @@ func main() {
 
 	//connect to db, we need to get config from environment
 	godotenv.Load()
-	cfg, err := config.NewConfig(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_HOST"))
-
+	cfg, err := config.NewConfig(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_HOST"), os.Getenv("TOKEN_KEY"))
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error occured while getting environment files")
 		os.Exit(1)
@@ -79,7 +78,14 @@ func main() {
 	depositHandler := handler.NewDepositHandler(depositService, logger)
 	depositRouter := handler.DepositRouter(depositHandler)
 
+	authRepository := repository.NewAuthRepository(pool)
+	authService := service.NewAuthService(&cfg.TokenKey, authRepository, userService, txManager)
+	authHandler := handler.NewAuthHandler(userService, authService, logger)
+	authRouter := handler.AuthRouter(authHandler)
+
 	root := http.NewServeMux()
+
+	root.Handle("/auth/", http.StripPrefix("/auth", authRouter))
 
 	root.Handle("/users/", http.StripPrefix("/users", userRouter))
 	root.Handle("/currencies/", http.StripPrefix("/currencies", currencyRouter))
