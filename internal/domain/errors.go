@@ -28,4 +28,8 @@ var (
 
 var (
 	ErrorTransactionNotFound = errors.New("Transaction not found")
+	ErrorPasswordNotCorrect  = errors.New("Password is not correct")
+)
+var (
+	ErrorSessionNotFound = errors.New("Session not found")
 )

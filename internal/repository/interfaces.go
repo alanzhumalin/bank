@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	user "github.com/alanzhumalin/bank/internal/domain"
@@ -64,4 +65,12 @@ type DepositRepository interface {
 
 type WithdrawalRepository interface {
 	Create(ctx context.Context, w domain.Withdrawal) error
+}
+
+type AuthRepository interface {
+	GetDetails(context context.Context, phoneNumber string) (LoginDetails, error)
+	Сreate(ctx context.Context, session domain.Session) error
+	Revoke(ctx context.Context, sessionId string) error
+	RevokeAllUserDevices(ctx context.Context, id int) error
+	Update(ctx context.Context, newHashedToken string, expires_at time.Time, sessionId string) error
 }

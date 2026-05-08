@@ -1,0 +1,55 @@
+package dto
+
+import "time"
+
+type RegisterRequest struct {
+	FirstName   string     `json:"firstname"`
+	LastName    string     `json:"lastname"`
+	Birthday    *time.Time `json:"birthday"`
+	PhoneNumber string     `json:"phone_number"`
+	Password    string     `json:"password"`
+}
+
+func (r *RegisterRequest) Validate() error {
+	if r.PhoneNumber == "" {
+		return ErrorPhoneNumRequired
+	}
+
+	if r.Password == "" {
+		return ErrorPasswordRequired
+	}
+
+	if r.Birthday == nil {
+		return ErrorBirthdayRequired
+	}
+
+	if r.FirstName == "" {
+		return ErrorFirstNameRequired
+	}
+	if r.LastName == "" {
+		return ErrorLastNameRequired
+	}
+	return nil
+}
+
+type LoginRequest struct {
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
+}
+
+func (l *LoginRequest) Validate() error {
+	if l.PhoneNumber == "" {
+		return ErrorPhoneNumRequired
+	}
+	if l.Password == "" {
+		return ErrorPasswordRequired
+	}
+
+	return nil
+}
+
+type UserKey struct{}
+
+type RoleKey struct{}
+
+type SessionKey struct{}
