@@ -8,18 +8,19 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
-func CurrencyRouter(c *currencyHandler) http.Handler {
+func CurrencyRouter(c *currencyHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /", c.Create)
-	mux.HandleFunc("GET /", c.GetAll)
-	mux.HandleFunc("DELETE /{id}", c.Delete)
-	mux.HandleFunc("GET /{id}", c.GetById)
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(c.Create), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("GET /", http.HandlerFunc(c.GetAll))
+	mux.Handle("DELETE /{id}", middleware.Chain(http.HandlerFunc(c.Delete), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("GET /{id}", middleware.Chain(http.HandlerFunc(c.GetById), authMiddleware.Middleware(), rbac.RBAC()))
 
 	return mux
 }
