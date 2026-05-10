@@ -7,6 +7,7 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
@@ -21,10 +22,10 @@ func NewTransferHandler(s service.TransferService, l zerolog.Logger) *transferHa
 	return &transferHandler{service: s, logger: l.With().Str("component", "transfer_handler").Logger()}
 }
 
-func TransferRouter(t *transferHandler) http.Handler {
+func TransferRouter(t *transferHandler, authMiddleware middleware.AuthMiddleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /", t.Create)
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(t.Create), authMiddleware.Middleware()))
 
 	return mux
 }
