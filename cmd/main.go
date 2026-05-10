@@ -42,6 +42,9 @@ func main() {
 		logger.Fatal().Err(err).Msg("Error occured while connecting to db")
 	}
 
+	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey)
+	_ = middleware.NewRbacMiddleware().RBAC("admin")
+
 	txManager := repository.NewTxManager(pool)
 
 	userRepository := repository.NewUserRepository(pool)
@@ -82,22 +85,20 @@ func main() {
 	authRepository := repository.NewAuthRepository(pool)
 	authService := service.NewAuthService(&cfg.TokenKey, authRepository, userService, txManager)
 	authHandler := handler.NewAuthHandler(userService, authService, logger)
-	authRouter := handler.AuthRouter(authHandler)
-
-	middleware := middleware.NewAuthMiddleWare(&cfg.TokenKey)
+	authRouter := handler.AuthRouter(authHandler, *authMiddleware)
 
 	root := http.NewServeMux()
 
 	root.Handle("/auth/", http.StripPrefix("/auth", authRouter))
 
-	root.Handle("/users/", http.StripPrefix("/users", userRouter))
 	root.Handle("/deposits/", http.StripPrefix("/deposits", depositRouter))
 
-	root.Handle("/currencies/", http.StripPrefix("/currencies", middleware.Middleware(currencyRouter)))
-	root.Handle("/transfers/", http.StripPrefix("/transfers", middleware.Middleware(transferRouter)))
-	root.Handle("/accounts/", http.StripPrefix("/accounts", middleware.Middleware(accountRouter)))
-	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", middleware.Middleware(withdrawalRouter)))
-	root.Handle("/transactions/", http.StripPrefix("/transactions", middleware.Middleware(transactionRouter)))
+	root.Handle("/users/", http.StripPrefix("/users", userRouter))
+	root.Handle("/currencies/", http.StripPrefix("/currencies", currencyRouter))
+	root.Handle("/transfers/", http.StripPrefix("/transfers", transferRouter))
+	root.Handle("/accounts/", http.StripPrefix("/accounts", accountRouter))
+	root.Handle("/withdrawals/", http.StripPrefix("/withdrawals", withdrawalRouter))
+	root.Handle("/transactions/", http.StripPrefix("/transactions", transactionRouter))
 
 	srv := http.Server{
 		Addr:    ":8081",

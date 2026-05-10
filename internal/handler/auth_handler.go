@@ -8,7 +8,9 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -18,14 +20,14 @@ type authHandler struct {
 	logger      zerolog.Logger
 }
 
-func AuthRouter(ah *authHandler) http.Handler {
+func AuthRouter(ah *authHandler, m middleware.AuthMiddleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /register", ah.Register)
-	mux.HandleFunc("POST /login", ah.Login)
-	mux.HandleFunc("POST /refresh", ah.Refresh)
-	mux.HandleFunc("POST /logout", ah.Logout)
-	mux.HandleFunc("POST /logoutall", ah.LogoutFromAllDevices)
+	mux.Handle("POST /register", http.HandlerFunc(ah.Register))
+	mux.Handle("POST /login", http.HandlerFunc(ah.Login))
+	mux.Handle("POST /refresh", middleware.Chain(http.HandlerFunc(ah.Refresh), m.Middleware()))
+	mux.Handle("POST /logout", middleware.Chain(http.HandlerFunc(ah.Logout), m.Middleware()))
+	mux.Handle("POST /logoutall", middleware.Chain(http.HandlerFunc(ah.LogoutFromAllDevices), m.Middleware()))
 
 	return mux
 }
@@ -38,12 +40,12 @@ func (ah *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid json")
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		WriteError(w, http.StatusBadRequest, err.Error())
+		response.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -54,10 +56,10 @@ func (ah *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorUserAlreadyExists):
-			WriteError(w, http.StatusConflict, err.Error())
+			response.WriteError(w, http.StatusConflict, err.Error())
 		default:
 			ah.logger.Error().Err(err).Msg("error in registering user")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 
 		return
@@ -65,7 +67,7 @@ func (ah *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	ah.logger.Info().Msg("Registered user")
 
-	WriteJson(w, http.StatusCreated, token)
+	response.WriteJson(w, http.StatusCreated, token)
 
 }
 
@@ -73,12 +75,12 @@ func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid json")
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		WriteError(w, http.StatusBadRequest, err.Error())
+		response.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -89,64 +91,64 @@ func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorUserNotFound):
-			WriteError(w, http.StatusNotFound, err.Error())
+			response.WriteError(w, http.StatusNotFound, err.Error())
 		case errors.Is(err, domain.ErrorPasswordNotCorrect):
-			WriteError(w, http.StatusNotAcceptable, err.Error())
+			response.WriteError(w, http.StatusNotAcceptable, err.Error())
 		default:
 			ah.logger.Error().Err(err).Msg("Error in login")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 		return
 	}
 
 	ah.logger.Info().Msg("Login")
-	WriteJson(w, http.StatusOK, token)
+	response.WriteJson(w, http.StatusOK, token)
 }
 
 func (ah *authHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionId, ok := r.Context().Value(dto.SessionKey{}).(string)
 
 	if !ok {
-		WriteError(w, http.StatusBadRequest, "bad request")
+		response.WriteError(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
 	if err := ah.authService.Logout(r.Context(), sessionId); err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorSessionNotFound):
-			WriteError(w, http.StatusNotFound, "session not found")
+			response.WriteError(w, http.StatusNotFound, "session not found")
 		default:
 			ah.logger.Error().Err(err).Msg("Error in logout")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 		return
 	}
 
 	ah.logger.Info().Str("session_id", sessionId).Msg("Logout")
-	WriteJson(w, http.StatusOK, "")
+	response.WriteJson(w, http.StatusOK, "")
 }
 
 func (ah *authHandler) LogoutFromAllDevices(w http.ResponseWriter, r *http.Request) {
 	userId, ok := r.Context().Value(dto.UserKey{}).(int)
 
 	if !ok {
-		WriteError(w, http.StatusBadRequest, "bad request")
+		response.WriteError(w, http.StatusBadRequest, "bad request")
 		return
 	}
 
 	if err := ah.authService.LogoutFromAllDevices(r.Context(), userId); err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorSessionNotFound):
-			WriteError(w, http.StatusNotFound, "sessions not found")
+			response.WriteError(w, http.StatusNotFound, "sessions not found")
 		default:
 			ah.logger.Error().Err(err).Msg("Error in logout from all devices")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 		return
 	}
 
 	ah.logger.Info().Str("user_id", strconv.Itoa(userId)).Msg("Logout from all devices")
-	WriteJson(w, http.StatusOK, "")
+	response.WriteJson(w, http.StatusOK, "")
 }
 
 func (ah *authHandler) Refresh(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +156,7 @@ func (ah *authHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req dto.RefreshRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		WriteError(w, http.StatusBadRequest, "refresh token is required")
+		response.WriteError(w, http.StatusBadRequest, "refresh token is required")
 		return
 	}
 
@@ -163,16 +165,16 @@ func (ah *authHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, dto.SessionIdNotFound):
-			WriteError(w, http.StatusNotFound, "Session not found")
+			response.WriteError(w, http.StatusNotFound, "Session not found")
 
 		default:
 			ah.logger.Error().Err(err).Msg("Error occured in updating the session")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 		return
 	}
 
 	ah.logger.Info().Str("session_id", sessionId).Msg("Update session")
-	WriteJson(w, http.StatusOK, token)
+	response.WriteJson(w, http.StatusOK, token)
 
 }

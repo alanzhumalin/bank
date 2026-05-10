@@ -8,6 +8,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -33,26 +34,26 @@ func (t *transferHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid json")
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		WriteJson(w, http.StatusBadRequest, err.Error())
+		response.WriteJson(w, http.StatusBadRequest, err.Error())
 	}
 
 	err = t.service.Create(r.Context(), req)
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorNotEnoughBalance):
-			WriteError(w, http.StatusOK, err.Error())
+			response.WriteError(w, http.StatusOK, err.Error())
 		default:
 			t.logger.Error().Err(err).Msg("Error in creating transfer")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 
 		return
 	}
 	t.logger.Info().Msg("Created transfer")
-	WriteJson(w, http.StatusCreated, "created")
+	response.WriteJson(w, http.StatusCreated, "created")
 }
