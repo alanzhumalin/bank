@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
@@ -21,11 +22,11 @@ func NewTransactionHandler(service service.TransactionService, logger zerolog.Lo
 	}
 }
 
-func TransactionRouter(th *transactionHandler) http.Handler {
+func TransactionRouter(th *transactionHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", th.GetAll)
-	mux.HandleFunc("GET /{account_id}", th.GetByAccountId)
+	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(th.GetAll), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("GET /{account_id}", middleware.Chain(http.HandlerFunc(th.GetByAccountId), authMiddleware.Middleware(), rbac.RBAC()))
 
 	return mux
 }
