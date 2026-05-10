@@ -8,17 +8,16 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
-func UserRouter(userHandler *userHandler) http.Handler {
+func UserRouter(userHandler *userHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /", userHandler.CreateUser)
-	mux.HandleFunc("GET /{phone}", userHandler.GetByPhone)
-	mux.HandleFunc("GET /", userHandler.GetAll)
+	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(userHandler.GetAll), authMiddleware.Middleware(), rbac.RBAC()))
 	return mux
 }
 
