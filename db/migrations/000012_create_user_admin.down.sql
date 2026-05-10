@@ -1,0 +1,1 @@
+delete from users where phone_number = '77701320091';
