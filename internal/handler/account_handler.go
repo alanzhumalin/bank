@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
@@ -23,11 +24,11 @@ func NewAccountHandler(service service.AccountService, logger zerolog.Logger) *a
 	}
 }
 
-func AccountRouter(accountHandler *accountHandler) http.Handler {
+func AccountRouter(accountHandler *accountHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /", accountHandler.Create)
-	mux.HandleFunc("DELETE /{account_id}", accountHandler.DeleteByID)
-	mux.HandleFunc("GET /", accountHandler.GetAll)
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(accountHandler.Create), authMiddleware.Middleware()))
+	mux.Handle("DELETE /{account_id}", middleware.Chain(http.HandlerFunc(accountHandler.DeleteByID), authMiddleware.Middleware()))
+	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(accountHandler.GetAll), authMiddleware.Middleware(), rbac.RBAC()))
 	return mux
 }
 
