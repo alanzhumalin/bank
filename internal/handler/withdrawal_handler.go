@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/alanzhumalin/bank/internal/dto"
+	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
@@ -20,10 +21,10 @@ func NewWithDrawalHandler(service service.WithdrawalService, logger zerolog.Logg
 	return &withdrawalHandler{service: service, logger: logger.With().Str("component", "withdrawal_handler").Logger()}
 }
 
-func WithdrawalRouter(w *withdrawalHandler) http.Handler {
+func WithdrawalRouter(w *withdrawalHandler, authMiddleware middleware.AuthMiddleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /", w.Create)
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(w.Create), authMiddleware.Middleware()))
 
 	return mux
 }
