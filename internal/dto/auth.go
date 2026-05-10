@@ -48,6 +48,10 @@ func (l *LoginRequest) Validate() error {
 	return nil
 }
 
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 type UserKey struct{}
 
 type RoleKey struct{}

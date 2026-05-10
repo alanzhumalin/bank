@@ -7,6 +7,7 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -36,12 +37,12 @@ func (a *accountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid json")
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		WriteJson(w, http.StatusBadRequest, err.Error())
+		response.WriteJson(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -49,36 +50,36 @@ func (a *accountHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		a.logger.Error().Err(err).Msg("Error in creating the account")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	a.logger.Info().Msg("Created a new account")
-	WriteJson(w, http.StatusCreated, "created")
+	response.WriteJson(w, http.StatusCreated, "created")
 }
 
 func (a *accountHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	pathId := r.PathValue("account_id")
 
 	if pathId == "" {
-		WriteError(w, http.StatusBadRequest, "id is required")
+		response.WriteError(w, http.StatusBadRequest, "id is required")
 		return
 	}
 
 	id, err := strconv.Atoi(pathId)
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "id must be an integer")
+		response.WriteError(w, http.StatusBadRequest, "id must be an integer")
 		return
 	}
 
 	if err = a.service.DeleteById(r.Context(), id); err != nil {
 		a.logger.Error().Err(err).Msg("Error in deleting account by id")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	a.logger.Info().Str("id", pathId).Msg("Deleted account by id")
-	WriteJson(w, http.StatusNoContent, "deleted")
+	response.WriteJson(w, http.StatusNoContent, "deleted")
 
 }
 
@@ -87,10 +88,10 @@ func (a *accountHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		a.logger.Error().Err(err).Msg("Error in getting all accounts")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	a.logger.Info().Msg("get all accounts")
-	WriteJson(w, http.StatusOK, accounts)
+	response.WriteJson(w, http.StatusOK, accounts)
 }

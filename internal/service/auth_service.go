@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
@@ -129,29 +130,66 @@ func (a *authService) Login(ctx context.Context, req dto.LoginRequest, ip string
 	}, nil
 }
 
-func (a *authService) UpdateSession(ctx context.Context, userId int, role string, sessionId string) (*dto.TokenPair, error) {
+func (a *authService) UpdateSession(ctx context.Context, req dto.RefreshRequest) (*dto.TokenPair, string, error) {
 
-	accessToken, err := jwt.GeneratateAccessToken(userId, role, sessionId, *a.tokenKey)
+	var token *dto.TokenPair
+	var sId string
 
-	if err != nil {
-		return nil, err
+	if err := a.txManager.WithTx(ctx, func(ctx context.Context) error {
+
+		claims, err := jwt.ParseAndValidateToken(req.RefreshToken, *a.tokenKey)
+
+		if err != nil {
+			return err
+		}
+
+		session, err := a.authRepository.GetSessionById(ctx, claims.SessionId)
+
+		if err != nil {
+			return err
+		}
+
+		if session.HashedRefreshToken != jwt.HashRefreshToken(req.RefreshToken, *a.tokenKey) {
+			return domain.ErrorIncorrectRefreshToken
+		}
+
+		if session.ExpiresAt.Before(time.Now()) {
+			return domain.ErrorRefreshTokenExpired
+		}
+
+		if !session.IsActive {
+			return domain.ErrorSessionNotActive
+		}
+
+		accessToken, err := jwt.GeneratateAccessToken(claims.UserId, claims.Role, claims.SessionId, *a.tokenKey)
+
+		if err != nil {
+			return err
+		}
+
+		refreshToken, expiresAt, _, err := jwt.GeneratateRefreshToken(claims.UserId, claims.Role, claims.SessionId, *a.tokenKey)
+		if err != nil {
+			return err
+		}
+
+		hashedRefreshToken := jwt.HashRefreshToken(refreshToken, *a.tokenKey)
+
+		if err = a.authRepository.Update(ctx, hashedRefreshToken, *expiresAt, claims.SessionId); err != nil {
+			return err
+		}
+
+		token = &dto.TokenPair{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		}
+		sId = claims.SessionId
+		return nil
+
+	}); err != nil {
+		return nil, "", err
 	}
 
-	refreshToken, expiresAt, _, err := jwt.GeneratateRefreshToken(userId, role, sessionId, *a.tokenKey)
-	if err != nil {
-		return nil, err
-	}
-
-	hashedRefreshToken := jwt.HashRefreshToken(refreshToken, *a.tokenKey)
-
-	if err = a.authRepository.Update(ctx, hashedRefreshToken, *expiresAt, sessionId); err != nil {
-		return nil, err
-	}
-
-	return &dto.TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	}, nil
+	return token, sId, nil
 
 }
 

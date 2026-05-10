@@ -9,6 +9,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -35,13 +36,13 @@ func (u *userHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		u.log.Error().Err(err).Msg("Error in get all users")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	u.log.Info().Msg("Get all users")
 
-	WriteJson(w, http.StatusOK, users)
+	response.WriteJson(w, http.StatusOK, users)
 }
 
 func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -52,14 +53,14 @@ func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		u.log.Warn().Err(err).Msg("failed to decode request")
-		WriteError(w, http.StatusBadRequest, "invalid json")
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
 	err = req.Validate()
 	if err != nil {
 		u.log.Warn().Err(err).Msg("Incorrect validation")
-		WriteError(w, http.StatusBadRequest, err.Error())
+		response.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -69,11 +70,11 @@ func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, domain.ErrorUserAlreadyExists):
 			u.log.Warn().Err(err).Msg("User already exists")
-			WriteError(w, http.StatusConflict, err.Error())
+			response.WriteError(w, http.StatusConflict, err.Error())
 		default:
 			u.log.Error().Err(err).Msg("failed to create user")
 
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 
 		return
@@ -81,7 +82,7 @@ func (u *userHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	u.log.Info().Str("Firstname", req.FirstName).Str("LastName", req.LastName).Str("PhoneNumber", req.PhoneNumber).Dur("duration", time.Since(start)).Msg("Created new user")
 
-	WriteJson(w, http.StatusCreated, "created")
+	response.WriteJson(w, http.StatusCreated, "created")
 
 }
 
@@ -90,7 +91,7 @@ func (u *userHandler) GetByPhone(w http.ResponseWriter, r *http.Request) {
 	phone := r.PathValue("phone")
 	if phone == "" {
 		u.log.Warn().Err(dto.ErrorPhoneNumRequired).Msg("Phone number is required")
-		WriteError(w, http.StatusBadRequest, "Phone number is required")
+		response.WriteError(w, http.StatusBadRequest, "Phone number is required")
 		return
 	}
 
@@ -100,16 +101,16 @@ func (u *userHandler) GetByPhone(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, domain.ErrorUserNotFound):
 			u.log.Warn().Err(err).Str("phone", phone).Msg("user not found")
-			WriteError(w, http.StatusNotFound, err.Error())
+			response.WriteError(w, http.StatusNotFound, err.Error())
 
 		default:
 			u.log.Error().Err(err).Str("phone", phone).Msg("Error get user by phone")
-			WriteError(w, http.StatusInternalServerError, "interval server error")
+			response.WriteError(w, http.StatusInternalServerError, "interval server error")
 		}
 		return
 	}
 
 	u.log.Info().Str("phone_number", phone).Msg("Get user by phone number")
 
-	WriteJson(w, http.StatusOK, res)
+	response.WriteJson(w, http.StatusOK, res)
 }

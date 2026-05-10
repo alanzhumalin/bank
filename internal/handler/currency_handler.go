@@ -9,6 +9,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -38,14 +39,14 @@ func NewCurrencyHandler(service service.CurrencyService, logger zerolog.Logger) 
 func (c *currencyHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	pathId := r.PathValue("id")
 	if pathId == "" {
-		WriteError(w, http.StatusBadRequest, "id is required")
+		response.WriteError(w, http.StatusBadRequest, "id is required")
 		return
 	}
 
 	id, err := strconv.Atoi(pathId)
 
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "id must be a number")
+		response.WriteError(w, http.StatusBadRequest, "id must be a number")
 		return
 	}
 
@@ -54,17 +55,17 @@ func (c *currencyHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorCurrencyNotFound):
-			WriteError(w, http.StatusBadRequest, "id must be a number")
+			response.WriteError(w, http.StatusBadRequest, "id must be a number")
 		default:
 			c.logger.Error().Err(err).Str("id", pathId).Msg("Error get by id currency_handler")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 
 		}
 		return
 	}
 
 	c.logger.Info().Str("id", pathId).Msg("Get by id ")
-	WriteJson(w, http.StatusOK, res)
+	response.WriteJson(w, http.StatusOK, res)
 
 }
 
@@ -74,12 +75,12 @@ func (c *currencyHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "Bad request")
+		response.WriteError(w, http.StatusBadRequest, "Bad request")
 		return
 	}
 
 	if err := req.Validate(); err != nil {
-		WriteError(w, http.StatusBadRequest, err.Error())
+		response.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -87,17 +88,17 @@ func (c *currencyHandler) Create(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, domain.ErrorCurrencyAlreadyExists):
 			c.logger.Warn().Str("code", req.Code).Msg("currency already exists")
-			WriteError(w, http.StatusConflict, err.Error())
+			response.WriteError(w, http.StatusConflict, err.Error())
 		default:
 			c.logger.Error().Err(err).Str("name", req.Name).Str("code", req.Code).Str("symbol", req.Symbol).Msg("Error create new currency")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		}
 		return
 	}
 
 	c.logger.Info().Str("code", req.Code).Msg("Created currency")
 
-	WriteJson(w, http.StatusCreated, "created")
+	response.WriteJson(w, http.StatusCreated, "created")
 
 }
 
@@ -105,14 +106,14 @@ func (c *currencyHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	pathId := r.PathValue("id")
 
 	if pathId == "" {
-		WriteError(w, http.StatusBadRequest, "id is required")
+		response.WriteError(w, http.StatusBadRequest, "id is required")
 		return
 	}
 
 	id, err := strconv.Atoi(pathId)
 
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "id must be number")
+		response.WriteError(w, http.StatusBadRequest, "id must be number")
 		return
 	}
 
@@ -120,12 +121,12 @@ func (c *currencyHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		c.logger.Error().Err(err).Msg("Error in deleting currency")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	c.logger.Info().Str("id", pathId).Msg("Delete currency")
-	WriteJson(w, http.StatusNoContent, "deleted")
+	response.WriteJson(w, http.StatusNoContent, "deleted")
 
 }
 
@@ -134,11 +135,11 @@ func (c *currencyHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		c.logger.Error().Err(err).Msg("Error in get all currencies")
-		WriteJson(w, http.StatusInternalServerError, "internal server error")
+		response.WriteJson(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	c.logger.Info().Msg("Get all currencies")
-	WriteJson(w, http.StatusOK, res)
+	response.WriteJson(w, http.StatusOK, res)
 
 }

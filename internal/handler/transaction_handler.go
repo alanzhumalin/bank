@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -33,13 +34,13 @@ func (th *transactionHandler) GetByAccountId(w http.ResponseWriter, r *http.Requ
 	pathId := r.PathValue("account_id")
 
 	if pathId == "" {
-		WriteError(w, http.StatusBadRequest, "account_id is required")
+		response.WriteError(w, http.StatusBadRequest, "account_id is required")
 		return
 	}
 
 	id, err := strconv.Atoi(pathId)
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "account_id must be an integer")
+		response.WriteError(w, http.StatusBadRequest, "account_id must be an integer")
 		return
 	}
 
@@ -47,12 +48,12 @@ func (th *transactionHandler) GetByAccountId(w http.ResponseWriter, r *http.Requ
 
 	if err != nil {
 		th.logger.Error().Err(err).Msg("Error in get transactions by account id")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	th.logger.Info().Str("account_id", pathId).Msg("Get all transactions by account id")
-	WriteJson(w, http.StatusOK, trs)
+	response.WriteJson(w, http.StatusOK, trs)
 
 }
 
@@ -62,11 +63,11 @@ func (th *transactionHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		th.logger.Error().Err(err).Msg("Error in get all transactions")
-		WriteError(w, http.StatusInternalServerError, "internal server error")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
 	th.logger.Info().Msg("Get all transactions")
-	WriteJson(w, http.StatusOK, trs)
+	response.WriteJson(w, http.StatusOK, trs)
 
 }

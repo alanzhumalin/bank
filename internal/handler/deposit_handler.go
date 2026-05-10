@@ -9,6 +9,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
 )
 
@@ -36,21 +37,21 @@ func (d *depositHandler) Create(w http.ResponseWriter, r *http.Request) {
 	pathId := r.PathValue("account_id")
 
 	if pathId == "" {
-		WriteError(w, http.StatusBadRequest, "account id is required")
+		response.WriteError(w, http.StatusBadRequest, "account id is required")
 		return
 	}
 
 	id, err := strconv.Atoi(pathId)
 
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "id must be an integer")
+		response.WriteError(w, http.StatusBadRequest, "id must be an integer")
 		return
 	}
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 
 	if err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid json")
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 
@@ -58,16 +59,16 @@ func (d *depositHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, domain.AccountNotFound):
-			WriteError(w, http.StatusNotFound, err.Error())
+			response.WriteError(w, http.StatusNotFound, err.Error())
 		case errors.Is(err, domain.AccountIsNotActive):
-			WriteError(w, http.StatusNotFound, err.Error())
+			response.WriteError(w, http.StatusNotFound, err.Error())
 		default:
 			d.logger.Error().Err(err).Str("account_id", pathId).Msg("Error occured")
-			WriteError(w, http.StatusInternalServerError, "internal server error")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
 	}
 
 	d.logger.Info().Str("account_id", pathId).Str("amount", req.Amount.String()).Msg("Created deposit")
-	WriteJson(w, http.StatusCreated, "created")
+	response.WriteJson(w, http.StatusCreated, "created")
 }

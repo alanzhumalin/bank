@@ -31,5 +31,8 @@ var (
 	ErrorPasswordNotCorrect  = errors.New("Password is not correct")
 )
 var (
-	ErrorSessionNotFound = errors.New("Session not found")
+	ErrorSessionNotFound       = errors.New("Session not found")
+	ErrorIncorrectRefreshToken = errors.New("Incorrect refresh token")
+	ErrorRefreshTokenExpired   = errors.New("Refresh token expired")
+	ErrorSessionNotActive      = errors.New("Session is not active")
 )
