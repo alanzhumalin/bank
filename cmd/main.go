@@ -42,40 +42,40 @@ func main() {
 		logger.Fatal().Err(err).Msg("Error occured while connecting to db")
 	}
 
-	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey)
-	_ = middleware.NewRbacMiddleware().RBAC("admin")
+	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey).Middleware()
+	rbac := middleware.NewRbacMiddleware().RBAC
 
 	txManager := repository.NewTxManager(pool)
 
 	userRepository := repository.NewUserRepository(pool)
 	userService := service.NewUserService(userRepository, logger)
 	userHandler := handler.NewUserHandler(userService, logger)
-	userRouter := handler.UserRouter(userHandler)
+	userRouter := handler.UserRouter(userHandler, authMiddleware, rbac)
 
 	currencyRepository := repository.NewCurrencyRepository(pool)
 	currencyService := service.NewCurrencyService(currencyRepository)
 	currencyHandler := handler.NewCurrencyHandler(currencyService, logger)
-	currencyRouter := handler.CurrencyRouter(currencyHandler)
+	currencyRouter := handler.CurrencyRouter(currencyHandler, authMiddleware, *rbac)
 
 	transactionRepository := repository.NewTransactionRepository(pool)
 	transactionService := service.NewTransactionService(transactionRepository)
 	transactionHandler := handler.NewTransactionHandler(transactionService, logger)
-	transactionRouter := handler.TransactionRouter(transactionHandler)
+	transactionRouter := handler.TransactionRouter(transactionHandler, *authMiddleware, *rbac)
 
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
 	accountHandler := handler.NewAccountHandler(accountService, logger)
-	accountRouter := handler.AccountRouter(accountHandler)
+	accountRouter := handler.AccountRouter(accountHandler, *authMiddleware, *rbac)
 
 	transferRepository := repository.NewTransferRepository(pool)
 	transferService := service.NewTransferService(transferRepository, txManager, accountRepository, transactionRepository)
 	transferHandler := handler.NewTransferHandler(transferService, logger)
-	transferRouter := handler.TransferRouter(transferHandler)
+	transferRouter := handler.TransferRouter(transferHandler, *authMiddleware)
 
 	withdrawalRepository := repository.NewWithdrawalRepository(pool)
 	withdrawalService := service.NewWithdrawalService(withdrawalRepository, txManager, accountRepository, transactionRepository)
 	withdrawalHandler := handler.NewWithDrawalHandler(withdrawalService, logger)
-	withdrawalRouter := handler.WithdrawalRouter(withdrawalHandler)
+	withdrawalRouter := handler.WithdrawalRouter(withdrawalHandler, *authMiddleware)
 
 	depositRepository := repository.NewDepositRepository(pool)
 	depositService := service.NewDepositService(depositRepository, accountRepository, txManager, transactionRepository)
