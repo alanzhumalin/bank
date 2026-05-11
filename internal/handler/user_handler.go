@@ -14,10 +14,10 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func UserRouter(userHandler *userHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
+func UserRouter(userHandler *userHandler, auth middleware.Middleware, rbac func(...string) func(next http.Handler) http.Handler) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(userHandler.GetAll), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(userHandler.GetAll), auth, rbac("admin")))
 	return mux
 }
 
