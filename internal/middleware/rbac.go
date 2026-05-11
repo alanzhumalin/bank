@@ -14,7 +14,7 @@ func NewRbacMiddleware() *RbacMiddleware {
 	return &RbacMiddleware{}
 }
 
-func (m *RbacMiddleware) RBAC(roles ...string) func(next http.Handler) http.Handler {
+func (m *RbacMiddleware) RBAC(roles ...string) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			role, ok := r.Context().Value(dto.RoleKey{}).(string)

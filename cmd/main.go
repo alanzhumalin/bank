@@ -55,7 +55,7 @@ func main() {
 	currencyRepository := repository.NewCurrencyRepository(pool)
 	currencyService := service.NewCurrencyService(currencyRepository)
 	currencyHandler := handler.NewCurrencyHandler(currencyService, logger)
-	currencyRouter := handler.CurrencyRouter(currencyHandler, authMiddleware, *rbac)
+	currencyRouter := handler.CurrencyRouter(currencyHandler, authMiddleware, rbac)
 
 	transactionRepository := repository.NewTransactionRepository(pool)
 	transactionService := service.NewTransactionService(transactionRepository)
