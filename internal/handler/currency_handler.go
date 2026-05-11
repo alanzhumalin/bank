@@ -14,13 +14,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func CurrencyRouter(c *currencyHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
+func CurrencyRouter(c *currencyHandler, authMiddleware middleware.Middleware, rbac func(roles ...string) middleware.Middleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(c.Create), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(c.Create), authMiddleware, rbac("admin")))
 	mux.Handle("GET /", http.HandlerFunc(c.GetAll))
-	mux.Handle("DELETE /{id}", middleware.Chain(http.HandlerFunc(c.Delete), authMiddleware.Middleware(), rbac.RBAC()))
-	mux.Handle("GET /{id}", middleware.Chain(http.HandlerFunc(c.GetById), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("DELETE /{id}", middleware.Chain(http.HandlerFunc(c.Delete), authMiddleware, rbac("admin")))
+	mux.Handle("GET /{id}", middleware.Chain(http.HandlerFunc(c.GetById), authMiddleware, rbac("admin")))
 
 	return mux
 }
