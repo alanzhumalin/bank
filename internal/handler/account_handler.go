@@ -24,11 +24,11 @@ func NewAccountHandler(service service.AccountService, logger zerolog.Logger) *a
 	}
 }
 
-func AccountRouter(accountHandler *accountHandler, authMiddleware middleware.AuthMiddleware, rbac middleware.RbacMiddleware) http.Handler {
+func AccountRouter(accountHandler *accountHandler, authMiddleware middleware.Middleware, rbac func(...string) middleware.Middleware) http.Handler {
 	mux := http.NewServeMux()
-	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(accountHandler.Create), authMiddleware.Middleware()))
-	mux.Handle("DELETE /{account_id}", middleware.Chain(http.HandlerFunc(accountHandler.DeleteByID), authMiddleware.Middleware()))
-	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(accountHandler.GetAll), authMiddleware.Middleware(), rbac.RBAC()))
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(accountHandler.Create), authMiddleware))
+	mux.Handle("DELETE /{account_id}", middleware.Chain(http.HandlerFunc(accountHandler.DeleteByID), authMiddleware))
+	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(accountHandler.GetAll), authMiddleware, rbac("admin")))
 	return mux
 }
 
