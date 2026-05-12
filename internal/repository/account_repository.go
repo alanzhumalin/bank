@@ -29,6 +29,34 @@ func (a *accountRepository) Create(ctx context.Context, acc domain.Account) erro
 	return nil
 }
 
+func (a *accountRepository) GetUserAccounts(ctx context.Context, userId int) ([]domain.Account, error) {
+	rows, err := a.pool.Query(ctx, `select id, user_id, currency_id, balance, is_active, created_at from accounts where id = $1`, userId)
+
+	if err != nil {
+		return []domain.Account{}, fmt.Errorf("Error in get user accounts: %w", err)
+
+	}
+
+	defer rows.Close()
+
+	sl := make([]domain.Account, 0)
+
+	for rows.Next() {
+		var account domain.Account
+
+		if err := rows.Scan(&account.Id, &account.UserId, &account.CurrencyId, &account.Balance, &account.IsActive, &account.CreatedAt); err != nil {
+			return []domain.Account{}, fmt.Errorf("Error in scanning data from sql: %w", err)
+		}
+		sl = append(sl, account)
+	}
+
+	if err := rows.Err(); err != nil {
+		return []domain.Account{}, fmt.Errorf("Error in rows get user accounts: %w", err)
+	}
+
+	return sl, nil
+}
+
 func (a *accountRepository) SelectTwoAccountsForUpdate(ctx context.Context, senderAccountId int, receiverAccountId int) (domain.Account, domain.Account, error) {
 	q := querier(ctx, a.pool)
 

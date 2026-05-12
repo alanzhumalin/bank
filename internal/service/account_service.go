@@ -26,6 +26,22 @@ func (a *accountService) Create(ctx context.Context, req dto.CreateAccountReques
 	return nil
 }
 
+func (a *accountService) GetUserAccounts(ctx context.Context, userId int) ([]dto.GetAccountResponse, error) {
+	accs, err := a.repo.GetUserAccounts(ctx, userId)
+
+	if err != nil {
+		return []dto.GetAccountResponse{}, err
+	}
+
+	sl := make([]dto.GetAccountResponse, 0, len(accs))
+
+	for _, val := range accs {
+		sl = append(sl, dto.ToGetAccountResponse(val))
+	}
+
+	return sl, nil
+}
+
 func (a *accountService) DeleteById(ctx context.Context, id int) error {
 	err := a.repo.DeleteById(ctx, id)
 

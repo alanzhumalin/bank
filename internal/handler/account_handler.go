@@ -29,7 +29,29 @@ func AccountRouter(accountHandler *accountHandler, authMiddleware middleware.Mid
 	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(accountHandler.Create), authMiddleware))
 	mux.Handle("DELETE /{account_id}", middleware.Chain(http.HandlerFunc(accountHandler.DeleteByID), authMiddleware))
 	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(accountHandler.GetAll), authMiddleware, rbac("admin")))
+	mux.Handle("GET /me", middleware.Chain(http.HandlerFunc(accountHandler.GetMyAccounts), authMiddleware))
 	return mux
+}
+
+func (a *accountHandler) GetMyAccounts(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value(dto.UserKey{}).(int)
+
+	if !ok || userId <= 0 {
+		response.WriteError(w, http.StatusBadRequest, dto.ErrorUserIdRequired)
+		return
+	}
+
+	accs, err := a.service.GetUserAccounts(r.Context(), userId)
+
+	if err != nil {
+		a.logger.Error().Err(err).Msg("ERror get my accounts")
+		response.WriteError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	a.logger.Info().Str("user_id", strconv.Itoa(userId)).Msg("Get my accounts")
+	response.WriteJson(w, http.StatusOK, accs)
+
 }
 
 func (a *accountHandler) Create(w http.ResponseWriter, r *http.Request) {

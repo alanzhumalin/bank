@@ -41,6 +41,7 @@ type AccountRepository interface {
 	IncreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error
 	DecreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error
 	GetByIdForUpdate(ctx context.Context, id int) (domain.Account, error)
+	GetUserAccounts(ctx context.Context, userId int) ([]domain.Account, error)
 }
 
 type TxManagerRepository interface {

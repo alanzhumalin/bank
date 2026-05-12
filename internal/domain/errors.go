@@ -36,3 +36,7 @@ var (
 	ErrorRefreshTokenExpired   = errors.New("Refresh token expired")
 	ErrorSessionNotActive      = errors.New("Session is not active")
 )
+
+var (
+	ErrorNoAccounts = errors.New("User has no accounts")
+)

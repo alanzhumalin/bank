@@ -31,6 +31,7 @@ type AccountService interface {
 	Create(ctx context.Context, req dto.CreateAccountRequest) error
 	DeleteById(ctx context.Context, id int) error
 	GetAll(ctx context.Context) ([]dto.GetAccountResponse, error)
+	GetUserAccounts(ctx context.Context, userId int) ([]dto.GetAccountResponse, error)
 }
 
 type DepositService interface {
