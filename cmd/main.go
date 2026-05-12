@@ -70,7 +70,7 @@ func main() {
 	transferRepository := repository.NewTransferRepository(pool)
 	transferService := service.NewTransferService(transferRepository, txManager, accountRepository, transactionRepository)
 	transferHandler := handler.NewTransferHandler(transferService, logger)
-	transferRouter := handler.TransferRouter(transferHandler, *authMiddleware)
+	transferRouter := handler.TransferRouter(transferHandler, authMiddleware)
 
 	withdrawalRepository := repository.NewWithdrawalRepository(pool)
 	withdrawalService := service.NewWithdrawalService(withdrawalRepository, txManager, accountRepository, transactionRepository)

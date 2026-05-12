@@ -22,10 +22,10 @@ func NewTransferHandler(s service.TransferService, l zerolog.Logger) *transferHa
 	return &transferHandler{service: s, logger: l.With().Str("component", "transfer_handler").Logger()}
 }
 
-func TransferRouter(t *transferHandler, authMiddleware middleware.AuthMiddleware) http.Handler {
+func TransferRouter(t *transferHandler, authMiddleware middleware.Middleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(t.Create), authMiddleware.Middleware()))
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(t.Create), authMiddleware))
 
 	return mux
 }
