@@ -21,10 +21,10 @@ func NewWithDrawalHandler(service service.WithdrawalService, logger zerolog.Logg
 	return &withdrawalHandler{service: service, logger: logger.With().Str("component", "withdrawal_handler").Logger()}
 }
 
-func WithdrawalRouter(w *withdrawalHandler, auth *middleware.Middleware) http.Handler {
+func WithdrawalRouter(w *withdrawalHandler, auth middleware.Middleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(w.Create), *auth))
+	mux.Handle("POST /", middleware.Chain(http.HandlerFunc(w.Create), auth))
 
 	return mux
 }
