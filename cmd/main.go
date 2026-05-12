@@ -75,7 +75,7 @@ func main() {
 	withdrawalRepository := repository.NewWithdrawalRepository(pool)
 	withdrawalService := service.NewWithdrawalService(withdrawalRepository, txManager, accountRepository, transactionRepository)
 	withdrawalHandler := handler.NewWithDrawalHandler(withdrawalService, logger)
-	withdrawalRouter := handler.WithdrawalRouter(withdrawalHandler, *authMiddleware)
+	withdrawalRouter := handler.WithdrawalRouter(withdrawalHandler, &authMiddleware)
 
 	depositRepository := repository.NewDepositRepository(pool)
 	depositService := service.NewDepositService(depositRepository, accountRepository, txManager, transactionRepository)
