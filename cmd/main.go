@@ -60,7 +60,7 @@ func main() {
 	transactionRepository := repository.NewTransactionRepository(pool)
 	transactionService := service.NewTransactionService(transactionRepository)
 	transactionHandler := handler.NewTransactionHandler(transactionService, logger)
-	transactionRouter := handler.TransactionRouter(transactionHandler, *authMiddleware, *rbac)
+	transactionRouter := handler.TransactionRouter(transactionHandler, authMiddleware, rbac)
 
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
