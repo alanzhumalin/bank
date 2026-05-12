@@ -85,7 +85,7 @@ func main() {
 	authRepository := repository.NewAuthRepository(pool)
 	authService := service.NewAuthService(&cfg.TokenKey, authRepository, userService, txManager)
 	authHandler := handler.NewAuthHandler(userService, authService, logger)
-	authRouter := handler.AuthRouter(authHandler, &authMiddleware)
+	authRouter := handler.AuthRouter(authHandler, authMiddleware)
 
 	root := http.NewServeMux()
 
