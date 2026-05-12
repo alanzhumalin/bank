@@ -20,14 +20,14 @@ type authHandler struct {
 	logger      zerolog.Logger
 }
 
-func AuthRouter(ah *authHandler, m middleware.AuthMiddleware) http.Handler {
+func AuthRouter(ah *authHandler, auth *middleware.Middleware) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.Handle("POST /register", http.HandlerFunc(ah.Register))
 	mux.Handle("POST /login", http.HandlerFunc(ah.Login))
-	mux.Handle("POST /refresh", middleware.Chain(http.HandlerFunc(ah.Refresh), m.Middleware()))
-	mux.Handle("POST /logout", middleware.Chain(http.HandlerFunc(ah.Logout), m.Middleware()))
-	mux.Handle("POST /logoutall", middleware.Chain(http.HandlerFunc(ah.LogoutFromAllDevices), m.Middleware()))
+	mux.Handle("POST /refresh", middleware.Chain(http.HandlerFunc(ah.Refresh), *auth))
+	mux.Handle("POST /logout", middleware.Chain(http.HandlerFunc(ah.Logout), *auth))
+	mux.Handle("POST /logoutall", middleware.Chain(http.HandlerFunc(ah.LogoutFromAllDevices), *auth))
 
 	return mux
 }
