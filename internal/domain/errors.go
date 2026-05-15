@@ -20,6 +20,7 @@ var (
 	AccountNotFound           = errors.New("Account not found")
 	AccountNotSupportCurrency = errors.New("Account does not support this currency")
 	AccountIsNotActive        = errors.New("Account is not active")
+	AccountAlreadyExists      = errors.New("Account already exists")
 )
 
 var (
