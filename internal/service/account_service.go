@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/repository"
 )
@@ -18,8 +19,17 @@ func NewAccountService(repo repository.AccountRepository) AccountService {
 
 func (a *accountService) Create(ctx context.Context, req dto.CreateAccountRequest) error {
 
-	err := a.repo.Create(ctx, req.ToDomainModel())
+	check, err := a.repo.Exists(ctx, req.UserId, req.CurrencyId)
+
 	if err != nil {
+		return err
+	}
+
+	if check {
+		return domain.AccountAlreadyExists
+	}
+
+	if err = a.repo.Create(ctx, req.ToDomainModel()); err != nil {
 		return fmt.Errorf("Error in creating account: %w", err)
 	}
 

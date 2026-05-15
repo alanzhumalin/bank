@@ -2,9 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
+	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/service"
@@ -72,8 +74,14 @@ func (a *accountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err = a.service.Create(r.Context(), req)
 
 	if err != nil {
-		a.logger.Error().Err(err).Msg("Error in creating the account")
-		response.WriteError(w, http.StatusInternalServerError, "internal server error")
+		switch {
+		case errors.Is(err, domain.AccountAlreadyExists):
+			response.WriteError(w, http.StatusConflict, err.Error())
+		default:
+			a.logger.Error().Err(err).Msg("Error in creating the account")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
+		}
+
 		return
 	}
 
