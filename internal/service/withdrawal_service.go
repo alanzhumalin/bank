@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
@@ -39,10 +40,11 @@ func (w *withdrawalService) Create(ctx context.Context, req dto.CreateWindrawalR
 			Type:          "withdraw",
 			Amount:        req.Amount,
 			AccountId:     req.AccountId,
+			CurrencyId:    account.CurrencyId,
 			StatusMessage: "Withdraw transaction started",
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error here: %w", err)
 		}
 
 		if err = w.accountRepo.DecreaseBalance(ctx, req.Amount, req.AccountId); err != nil {
