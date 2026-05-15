@@ -20,6 +20,7 @@ var (
 	AccountNotFound           = errors.New("Account not found")
 	AccountNotSupportCurrency = errors.New("Account does not support this currency")
 	AccountIsNotActive        = errors.New("Account is not active")
+	AccountAlreadyExists      = errors.New("Account already exists")
 )
 
 var (
@@ -35,4 +36,8 @@ var (
 	ErrorIncorrectRefreshToken = errors.New("Incorrect refresh token")
 	ErrorRefreshTokenExpired   = errors.New("Refresh token expired")
 	ErrorSessionNotActive      = errors.New("Session is not active")
+)
+
+var (
+	ErrorNoAccounts = errors.New("User has no accounts")
 )
