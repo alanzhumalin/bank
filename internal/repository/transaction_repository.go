@@ -26,8 +26,8 @@ func (tr *transactionRepository) Create(ctx context.Context, t ...domain.Transac
 	for _, val := range t {
 		var transactionId int
 		err := q.QueryRow(ctx, `insert into 
-	transactions(type, amount, account_id, status, status_message, currency_id) 
-	values ($1,$2,$3,$4,$5, $6) returning id`, val.Type, val.Amount, val.AccountId, val.Status, val.StatusMessage, val.CurrencyId).Scan(&transactionId)
+	transactions(type, amount, account_id, status_message, currency_id) 
+	values ($1,$2,$3,$4,$5) returning id`, val.Type, val.Amount, val.AccountId, val.StatusMessage, val.CurrencyId).Scan(&transactionId)
 
 		if err != nil {
 			return map[int]int{}, fmt.Errorf("Error occured while creating new transfer: %w", err)
