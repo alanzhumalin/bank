@@ -51,6 +51,7 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 			Type:          "transfer",
 			Amount:        req.Amount,
 			AccountId:     req.SenderAccountId,
+			CurrencyId:    req.CurrencyId,
 			Status:        "pending",
 			StatusMessage: "transaction started",
 		}
@@ -58,6 +59,7 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 			Type:          "transfer",
 			Amount:        req.Amount,
 			AccountId:     req.ReceiverAccountId,
+			CurrencyId:    req.CurrencyId,
 			Status:        "pending",
 			StatusMessage: "transaction started",
 		}
