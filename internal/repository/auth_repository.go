@@ -39,7 +39,7 @@ func (a *authRepository) GetDetails(context context.Context, phoneNumber string)
 
 func (a *authRepository) Сreate(ctx context.Context, session domain.Session) error {
 	q := querier(ctx, a.pool)
-	_, err := q.Exec(ctx, `insert into sessions(id, hashed_refresh_token, user_id, device, ip, created_at, expires_at, is_active) values($1, $2, $3, $4, $5, $6, $7, $8)`, session.Id, session.HashedRefreshToken, session.UserId, session.Device, session.Ip, session.CreatedAt, session.ExpiresAt, session.IsActive)
+	_, err := q.Exec(ctx, `insert into sessions(id, hashed_refresh_token, user_id, device, ip, created_at, expires_at) values($1, $2, $3, $4, $5, $6, $7)`, session.Id, session.HashedRefreshToken, session.UserId, session.Device, session.Ip, session.CreatedAt, session.ExpiresAt)
 
 	if err != nil {
 		return fmt.Errorf("error in creating session: %w", err)
