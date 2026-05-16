@@ -1,0 +1,1 @@
+alter table if exists accounts drop column if exists deleted_at;
