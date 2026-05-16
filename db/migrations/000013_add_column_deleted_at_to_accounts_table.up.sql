@@ -1,0 +1,1 @@
+alter table if exists accounts add column if not exists deleted_at timestamptz;

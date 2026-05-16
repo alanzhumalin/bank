@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
@@ -53,7 +54,8 @@ func (a *accountService) GetUserAccounts(ctx context.Context, userId int) ([]dto
 }
 
 func (a *accountService) DeleteById(ctx context.Context, id int) error {
-	err := a.repo.DeleteById(ctx, id)
+	tNow := time.Now()
+	err := a.repo.DeleteById(ctx, id, tNow)
 
 	if err != nil {
 		return fmt.Errorf("Error in deleting account by id: %w", err)

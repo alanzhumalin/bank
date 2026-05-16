@@ -35,7 +35,7 @@ type TransferRepository interface {
 
 type AccountRepository interface {
 	Create(ctx context.Context, a domain.Account) error
-	DeleteById(ctx context.Context, id int) error
+	DeleteById(ctx context.Context, id int, time time.Time) error
 	GetAll(ctx context.Context) ([]domain.Account, error)
 	SelectTwoAccountsForUpdate(ctx context.Context, senderAccountId int, receiverAccountId int) (domain.Account, domain.Account, error)
 	IncreaseBalance(ctx context.Context, balance decimal.Decimal, accountId int) error

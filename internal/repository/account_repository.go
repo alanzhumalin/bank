@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/jackc/pgx/v5"
@@ -30,7 +31,7 @@ func (a *accountRepository) Create(ctx context.Context, acc domain.Account) erro
 }
 
 func (a *accountRepository) GetUserAccounts(ctx context.Context, userId int) ([]domain.Account, error) {
-	rows, err := a.pool.Query(ctx, `select id, user_id, currency_id, balance, is_active, created_at from accounts where user_id = $1`, userId)
+	rows, err := a.pool.Query(ctx, `select id, user_id, currency_id, balance, is_active, created_at from accounts where user_id = $1 and deleted_at is null`, userId)
 
 	if err != nil {
 		return []domain.Account{}, fmt.Errorf("Error in get user accounts: %w", err)
@@ -158,8 +159,9 @@ func (a *accountRepository) DecreaseBalance(ctx context.Context, balance decimal
 	return nil
 }
 
-func (a *accountRepository) DeleteById(ctx context.Context, id int) error {
-	tag, err := a.pool.Exec(ctx, `delete from accounts where id = $1`, id)
+func (a *accountRepository) DeleteById(ctx context.Context, id int, time time.Time) error {
+
+	tag, err := a.pool.Exec(ctx, `update accounts set deleted_at = $1 where id = $2 and deleted_at is null`, time, id)
 
 	if err != nil {
 		return fmt.Errorf("Error in deleting by id the account: %w", err)
