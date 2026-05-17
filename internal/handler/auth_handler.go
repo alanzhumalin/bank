@@ -25,7 +25,7 @@ func AuthRouter(ah *authHandler, auth middleware.Middleware) http.Handler {
 
 	mux.Handle("POST /register", http.HandlerFunc(ah.Register))
 	mux.Handle("POST /login", http.HandlerFunc(ah.Login))
-	mux.Handle("POST /refresh", middleware.Chain(http.HandlerFunc(ah.Refresh), auth))
+	mux.Handle("POST /refresh", middleware.Chain(http.HandlerFunc(ah.Refresh)))
 	mux.Handle("POST /logout", middleware.Chain(http.HandlerFunc(ah.Logout), auth))
 	mux.Handle("POST /logoutall", middleware.Chain(http.HandlerFunc(ah.LogoutFromAllDevices), auth))
 
