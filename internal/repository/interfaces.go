@@ -6,6 +6,7 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	user "github.com/alanzhumalin/bank/internal/domain"
+	"github.com/alanzhumalin/bank/pkg/pagination"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/shopspring/decimal"
@@ -57,7 +58,7 @@ type Querier interface {
 type TransactionRepository interface {
 	Create(ctx context.Context, t ...domain.Transaction) (map[int]int, error)
 	MarkTransaction(ctx context.Context, status string, status_message string, id int) error
-	GetByAccountId(ctx context.Context, id int) ([]domain.Transaction, error)
+	GetByAccountId(ctx context.Context, id int, limit int, transactionCursor *pagination.TransactionCursor) ([]domain.Transaction, int, error)
 	GetAll(ctx context.Context) ([]domain.Transaction, error)
 }
 
