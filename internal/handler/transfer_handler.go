@@ -46,6 +46,8 @@ func (t *transferHandler) Create(w http.ResponseWriter, r *http.Request) {
 	err = t.service.Create(r.Context(), req)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.AccountNotSupportCurrency):
+			response.WriteError(w, http.StatusOK, err.Error())
 		case errors.Is(err, domain.ErrorNotEnoughBalance):
 			response.WriteError(w, http.StatusOK, err.Error())
 		default:
