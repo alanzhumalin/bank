@@ -45,7 +45,7 @@ type WithdrawalService interface {
 type TransactionService interface {
 	GetByAccountId(ctx context.Context, accountId int, limit int, cursor string, currentUserId int) (dto.CursorResponse[dto.TransactionResponse], error)
 	GetAll(ctx context.Context) ([]dto.TransactionResponse, error)
-	GetByUserId(ctx context.Context, userId int, cursor string, limit int) (dto.CursorResponse[dto.TransactionResponse], error)
+	GetByUserId(ctx context.Context, userId int, cursorValue string, limit int, currencies *[]string) (dto.CursorResponse[dto.TransactionResponse], error)
 }
 
 type AuthService interface {
