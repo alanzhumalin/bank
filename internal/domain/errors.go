@@ -30,6 +30,7 @@ var (
 var (
 	ErrorTransactionNotFound = errors.New("Transaction not found")
 	ErrorPasswordNotCorrect  = errors.New("Password is not correct")
+	ErrorForBidden           = errors.New("forbidden")
 )
 var (
 	ErrorSessionNotFound       = errors.New("Session not found")

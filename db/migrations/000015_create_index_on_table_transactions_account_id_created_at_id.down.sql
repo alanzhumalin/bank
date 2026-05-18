@@ -1,0 +1,1 @@
+drop index if exists idx_transactions_account_id_created_at_id;

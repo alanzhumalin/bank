@@ -1,0 +1,1 @@
+drop index idx_accounts_userid_id;

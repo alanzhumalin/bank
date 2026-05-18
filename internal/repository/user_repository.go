@@ -72,20 +72,16 @@ func (u *userRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 	return sl, nil
 }
 
-func (u *userRepository) UserExists(ctx context.Context, phoneNumber string) error {
+func (u *userRepository) UserExists(ctx context.Context, phoneNumber string) (bool, error) {
 	q := querier(ctx, u.pool)
-	var num int
-	err := q.QueryRow(ctx, `select id from users where phone_number = $1`, phoneNumber).Scan(&num)
+	var exists bool
+	err := q.QueryRow(ctx, `select exists(select 1 from users where phone_number = $1)`, phoneNumber).Scan(&exists)
 
-	if err == nil {
-		return domain.ErrorUserAlreadyExists
+	if err != nil {
+		return false, fmt.Errorf("Error in checking user existence: %w", err)
 	}
 
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil
-	}
-
-	return fmt.Errorf("user existence check: %w", err)
+	return exists, nil
 }
 
 func (u *userRepository) Create(ctx context.Context, user user.User) (int, string, error) {
