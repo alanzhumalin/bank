@@ -60,6 +60,7 @@ type TransactionRepository interface {
 	MarkTransaction(ctx context.Context, status string, status_message string, id int) error
 	GetByAccountId(ctx context.Context, id int, limit int, transactionCursor *pagination.TransactionCursor) ([]domain.Transaction, int, error)
 	GetAll(ctx context.Context) ([]domain.Transaction, error)
+	GetByUserId(ctx context.Context, userId int, cursor *pagination.TransactionCursor, limit int) ([]domain.Transaction, error)
 }
 
 type DepositRepository interface {
