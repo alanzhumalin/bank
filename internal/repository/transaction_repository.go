@@ -19,7 +19,7 @@ func NewTransactionRepository(pool *pgxpool.Pool) TransactionRepository {
 	}
 }
 
-func (tr *transactionRepository) GetByUserId(ctx context.Context, userId int, cursor *pagination.TransactionCursor, limit int) ([]domain.Transaction, error) {
+func (tr *transactionRepository) GetByUserId(ctx context.Context, userId int, cursor *pagination.TransactionCursor, limit int, currencies *[]string) ([]domain.Transaction, error) {
 	query := `
 		select tr.id, tr.type, tr.amount, tr.account_id, tr.status, tr.status_message, tr.created_at, tr.currency_id, 
 		c.code as currency_code, c.symbol as currency_symbol, 
@@ -60,6 +60,12 @@ func (tr *transactionRepository) GetByUserId(ctx context.Context, userId int, cu
 
 	args := []any{userId}
 	argsCount := 2
+
+	if currencies != nil {
+		query += fmt.Sprintf(` and c.code = ANY($%d)`, argsCount)
+		argsCount += 1
+		args = append(args, *currencies)
+	}
 
 	if cursor != nil {
 		query += fmt.Sprintf(` and (tr.created_at, tr.id) < ($%d, $%d)`, argsCount, argsCount+1)

@@ -20,7 +20,7 @@ func NewTransactionService(repo repository.TransactionRepository) TransactionSer
 	}
 }
 
-func (ts *transactionService) GetByUserId(ctx context.Context, userId int, cursorValue string, limit int) (dto.CursorResponse[dto.TransactionResponse], error) {
+func (ts *transactionService) GetByUserId(ctx context.Context, userId int, cursorValue string, limit int, currencies *[]string) (dto.CursorResponse[dto.TransactionResponse], error) {
 
 	queryLimit := limit + 1
 
@@ -29,7 +29,7 @@ func (ts *transactionService) GetByUserId(ctx context.Context, userId int, curso
 		return dto.CursorResponse[dto.TransactionResponse]{}, err
 	}
 
-	trs, err := ts.repo.GetByUserId(ctx, userId, cursor, queryLimit)
+	trs, err := ts.repo.GetByUserId(ctx, userId, cursor, queryLimit, currencies)
 
 	if err != nil {
 		return dto.CursorResponse[dto.TransactionResponse]{}, err

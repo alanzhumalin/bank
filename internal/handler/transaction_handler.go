@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
@@ -45,6 +46,14 @@ func (th *transactionHandler) GetByUserId(w http.ResponseWriter, r *http.Request
 
 	query := r.URL.Query()
 
+	var currencies *[]string
+
+	if currencyRaw := query.Get("currencies"); currencyRaw != "" {
+
+		cRaw := strings.Split(currencyRaw, ",")
+		currencies = &cRaw
+	}
+
 	cursor := query.Get("cursor")
 	limit := 20
 
@@ -68,7 +77,7 @@ func (th *transactionHandler) GetByUserId(w http.ResponseWriter, r *http.Request
 		limit = 100
 	}
 
-	res, err := th.service.GetByUserId(r.Context(), userId, cursor, limit)
+	res, err := th.service.GetByUserId(r.Context(), userId, cursor, limit, currencies)
 
 	if err != nil {
 		switch {
