@@ -39,9 +39,10 @@ func (s *userService) GetAll(ctx context.Context) ([]dto.GetUser, error) {
 
 func (s *userService) Create(ctx context.Context, req dto.CreateUserRequest) (int, string, error) {
 
-	err := s.repo.UserExists(ctx, req.PhoneNumber)
-	if err != nil {
-		return 0, "", err
+	exists, err := s.repo.UserExists(ctx, req.PhoneNumber)
+
+	if exists {
+		return 0, "", domain.ErrorUserAlreadyExists
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
