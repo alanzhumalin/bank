@@ -1,0 +1,1 @@
+create index if not exists idx_transactions_account_id_created_at_id on transactions(account_id, created_at desc, id desc);

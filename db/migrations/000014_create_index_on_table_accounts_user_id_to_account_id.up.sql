@@ -1,0 +1,1 @@
+create index if not exists idx_accounts_userid_id on accounts(user_id, id);
