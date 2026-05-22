@@ -19,6 +19,10 @@ import (
 // 	transactionRepo repository.TransactionRepository
 // }
 
+var (
+	ErrorDb = errors.New("Error db")
+)
+
 type fakeTransferRepo struct {
 	createErr     error
 	createdCalled bool
@@ -397,5 +401,297 @@ func TestTransferErrors(t *testing.T) {
 
 		})
 
+	}
+}
+
+func TestTransferServiceRepoErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		wantedError error
+		account1    domain.Account
+		account2    domain.Account
+		req         dto.CreateTransferRequest
+		setup       func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo)
+	}{
+		{
+			name:        "select two accounts error",
+			wantedError: domain.AccountNotFound,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				accountRepo.selectTwoAccountsForUpdateError = domain.AccountNotFound
+			},
+		},
+
+		{
+			name:        "create transaction error",
+			wantedError: ErrorDb,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				transactionRepo.createErr = ErrorDb
+			},
+		},
+
+		{
+			name:        "decrease balance, account not found error",
+			wantedError: domain.AccountNotFound,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				accountRepo.decreaseBalanceError = domain.AccountNotFound
+			},
+		},
+
+		{
+			name:        "decrease balance, error db",
+			wantedError: ErrorDb,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				accountRepo.decreaseBalanceError = ErrorDb
+			},
+		},
+
+		{
+			name:        "increase balance, account not found error",
+			wantedError: domain.AccountNotFound,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				accountRepo.decreaseBalanceError = domain.AccountNotFound
+			},
+		},
+
+		{
+			name:        "increase balance, error db",
+			wantedError: ErrorDb,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				accountRepo.decreaseBalanceError = ErrorDb
+			},
+		},
+
+		{
+			name:        "create transfer error db",
+			wantedError: ErrorDb,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				transferRepo.createErr = ErrorDb
+			},
+		},
+
+		{
+			name:        "mark transaction, transaction not found error",
+			wantedError: domain.ErrorTransactionNotFound,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				transactionRepo.markTransactionErr = domain.ErrorTransactionNotFound
+			},
+		},
+
+		{
+			name:        "mark transaction, db error",
+			wantedError: ErrorDb,
+			account1: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			account2: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(100),
+			},
+			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
+				transactionRepo.markTransactionErr = ErrorDb
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			transferRepo := &fakeTransferRepo{}
+			txManager := &fakeTxManager{}
+			accountRepo := &fakeAccountRepo{
+				account1: test.account1,
+				account2: test.account2,
+			}
+			transactionRepo := &fakeTransactionRepo{}
+
+			test.setup(accountRepo, transactionRepo, txManager, transferRepo)
+
+			srv := transferService{
+				transferRepo:    transferRepo,
+				txManager:       txManager,
+				accountRepo:     accountRepo,
+				transactionRepo: transactionRepo,
+			}
+
+			err := srv.Create(context.Background(), test.req)
+
+			if !errors.Is(err, test.wantedError) {
+				t.Fatalf("Expected error %v, got %v", test.wantedError, err)
+			}
+		})
 	}
 }
