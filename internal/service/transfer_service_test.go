@@ -406,16 +406,28 @@ func TestTransferErrors(t *testing.T) {
 
 func TestTransferServiceRepoErrors(t *testing.T) {
 	tests := []struct {
-		name        string
-		wantedError error
-		account1    domain.Account
-		account2    domain.Account
-		req         dto.CreateTransferRequest
-		setup       func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo)
+		name                                 string
+		wantedError                          error
+		account1                             domain.Account
+		account2                             domain.Account
+		req                                  dto.CreateTransferRequest
+		wantTransactionCreateCalled          bool
+		wantDecreaseBalanceCalled            bool
+		wantIncreaseBalanceCalled            bool
+		wantTransferCreateCalled             bool
+		wantMarkTransactionCalled            bool
+		wantSelectTwoAccountsForUpdateCalled bool
+		setup                                func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo)
 	}{
 		{
-			name:        "select two accounts error",
-			wantedError: domain.AccountNotFound,
+			name:                                 "select two accounts error",
+			wantedError:                          domain.AccountNotFound,
+			wantTransactionCreateCalled:          false,
+			wantDecreaseBalanceCalled:            false,
+			wantIncreaseBalanceCalled:            false,
+			wantTransferCreateCalled:             false,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -442,8 +454,14 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 		},
 
 		{
-			name:        "create transaction error",
-			wantedError: ErrorDb,
+			name:                                 "create transaction error",
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            false,
+			wantIncreaseBalanceCalled:            false,
+			wantTransferCreateCalled:             false,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
+			wantedError:                          ErrorDb,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -470,8 +488,14 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 		},
 
 		{
-			name:        "decrease balance, account not found error",
-			wantedError: domain.AccountNotFound,
+			name:                                 "decrease balance, account not found error",
+			wantedError:                          domain.AccountNotFound,
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            false,
+			wantTransferCreateCalled:             false,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -498,8 +522,14 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 		},
 
 		{
-			name:        "decrease balance, error db",
-			wantedError: ErrorDb,
+			name:                                 "decrease balance, error db",
+			wantedError:                          ErrorDb,
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            false,
+			wantTransferCreateCalled:             false,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -526,8 +556,14 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 		},
 
 		{
-			name:        "increase balance, account not found error",
-			wantedError: domain.AccountNotFound,
+			name:                                 "increase balance, account not found error",
+			wantedError:                          domain.AccountNotFound,
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            true,
+			wantTransferCreateCalled:             false,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -549,13 +585,19 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 				Amount:            decimal.NewFromInt(100),
 			},
 			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
-				accountRepo.decreaseBalanceError = domain.AccountNotFound
+				accountRepo.increaseBalanceError = domain.AccountNotFound
 			},
 		},
 
 		{
-			name:        "increase balance, error db",
-			wantedError: ErrorDb,
+			name:                                 "increase balance, error db",
+			wantedError:                          ErrorDb,
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            true,
+			wantTransferCreateCalled:             false,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -577,13 +619,19 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 				Amount:            decimal.NewFromInt(100),
 			},
 			setup: func(accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo, txRepo *fakeTxManager, transferRepo *fakeTransferRepo) {
-				accountRepo.decreaseBalanceError = ErrorDb
+				accountRepo.increaseBalanceError = ErrorDb
 			},
 		},
 
 		{
-			name:        "create transfer error db",
-			wantedError: ErrorDb,
+			name:                                 "create transfer error db",
+			wantedError:                          ErrorDb,
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            true,
+			wantTransferCreateCalled:             true,
+			wantMarkTransactionCalled:            false,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -612,6 +660,13 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 		{
 			name:        "mark transaction, transaction not found error",
 			wantedError: domain.ErrorTransactionNotFound,
+
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            true,
+			wantTransferCreateCalled:             true,
+			wantMarkTransactionCalled:            true,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -638,8 +693,14 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 		},
 
 		{
-			name:        "mark transaction, db error",
-			wantedError: ErrorDb,
+			name:                                 "mark transaction, db error",
+			wantedError:                          ErrorDb,
+			wantTransactionCreateCalled:          true,
+			wantDecreaseBalanceCalled:            true,
+			wantIncreaseBalanceCalled:            true,
+			wantTransferCreateCalled:             true,
+			wantMarkTransactionCalled:            true,
+			wantSelectTwoAccountsForUpdateCalled: true,
 			account1: domain.Account{
 				Id:         100,
 				UserId:     1,
@@ -667,6 +728,7 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 	}
 
 	for _, test := range tests {
+
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -692,6 +754,38 @@ func TestTransferServiceRepoErrors(t *testing.T) {
 			if !errors.Is(err, test.wantedError) {
 				t.Fatalf("Expected error %v, got %v", test.wantedError, err)
 			}
+
+			// wantTransactionCreateCalled          bool
+			// wantDecreaseBalanceCalled            bool
+			// wantIncreaseBalanceCalled            bool
+			// wantTransferCreateCalled             bool
+			// wantMarkTransactionCalled            bool
+			// wantSelectTwoAccountsForUpdateCalled bool
+
+			if transactionRepo.calledCreate != test.wantTransactionCreateCalled {
+				t.Fatalf("Expected calledCreate %v, got %v", transactionRepo.calledCreate, test.wantTransactionCreateCalled)
+			}
+
+			if accountRepo.calledDecreaseBalance != test.wantDecreaseBalanceCalled {
+				t.Fatalf("Expected calledDecreaseBalance %v, got %v", accountRepo.calledDecreaseBalance, test.wantDecreaseBalanceCalled)
+			}
+
+			if accountRepo.calledIncreaseBalance != test.wantIncreaseBalanceCalled {
+				t.Fatalf("Expected calledIncreaseBalance %v, got %v", accountRepo.calledIncreaseBalance, test.wantIncreaseBalanceCalled)
+			}
+
+			if transferRepo.createdCalled != test.wantTransferCreateCalled {
+				t.Fatalf("Expected transferCreate %v, got %v", transferRepo.createdCalled, test.wantTransferCreateCalled)
+			}
+
+			if transactionRepo.calledMarkTransaction != test.wantMarkTransactionCalled {
+				t.Fatalf("Expected calledMarkTransaction %v, got %v", transactionRepo.calledMarkTransaction, test.wantMarkTransactionCalled)
+			}
+
+			if accountRepo.calledSelectTwoAccountForUpdate != test.wantSelectTwoAccountsForUpdateCalled {
+				t.Fatalf("Expected calledSelectTwoAccountForUpdate %v, got %v", accountRepo.calledSelectTwoAccountForUpdate, test.wantSelectTwoAccountsForUpdateCalled)
+			}
+
 		})
 	}
 }
