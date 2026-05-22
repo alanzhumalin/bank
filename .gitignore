@@ -2,3 +2,4 @@
 go.sum
 .DS_Store
 frontend/coverage.out
+coverage.out
