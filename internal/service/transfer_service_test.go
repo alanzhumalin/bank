@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -222,4 +223,179 @@ func TestTransferService_CreateSuccess(t *testing.T) {
 		t.Error("Expected transaction marked to be called")
 	}
 
+}
+
+func TestTransferErrors(t *testing.T) {
+	tests := []struct {
+		sender      domain.Account
+		receiver    domain.Account
+		req         dto.CreateTransferRequest
+		name        string //testname
+		wantedError error
+	}{
+		{
+			sender: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+			receiver: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 2,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(1000),
+			},
+			name:        "receiver currency mismatch",
+			wantedError: domain.AccountNotSupportCurrency,
+		}, {
+			sender: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+			receiver: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 2,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   false,
+				CreatedAt:  time.Now(),
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        2,
+				Amount:            decimal.NewFromInt(1000),
+			},
+			name:        "receiver account is not active",
+			wantedError: domain.AccountIsNotActive,
+		},
+
+		{
+			sender: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+			receiver: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 2,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        2,
+				Amount:            decimal.NewFromInt(1000),
+			},
+			name:        "sender currency mismatch",
+			wantedError: domain.AccountNotSupportCurrency,
+		},
+
+		{
+			sender: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   false,
+				CreatedAt:  time.Now(),
+			},
+			receiver: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(1000),
+			},
+			wantedError: domain.AccountIsNotActive,
+			name:        "sender account is not active",
+		},
+
+		{
+			sender: domain.Account{
+				Id:         100,
+				UserId:     1,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(999),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+			receiver: domain.Account{
+				Id:         101,
+				UserId:     2,
+				CurrencyId: 1,
+				Balance:    decimal.NewFromInt(10000),
+				IsActive:   true,
+				CreatedAt:  time.Now(),
+			},
+
+			req: dto.CreateTransferRequest{
+				SenderAccountId:   100,
+				ReceiverAccountId: 101,
+				CurrencyId:        1,
+				Amount:            decimal.NewFromInt(1000),
+			},
+			wantedError: domain.ErrorNotEnoughBalance,
+			name:        "sender has less money",
+		},
+	}
+
+	for _, test := range tests {
+
+		t.Run(test.name, func(t *testing.T) {
+
+			t.Parallel()
+			transferRepo := &fakeTransferRepo{}
+			txManager := &fakeTxManager{}
+			transactionRepo := &fakeTransactionRepo{}
+			accountRepo := &fakeAccountRepo{
+				account1: test.sender,
+				account2: test.receiver,
+			}
+
+			srv := transferService{
+				transferRepo:    transferRepo,
+				txManager:       txManager,
+				accountRepo:     accountRepo,
+				transactionRepo: transactionRepo,
+			}
+
+			err := srv.Create(context.Background(), test.req)
+
+			if !errors.Is(err, test.wantedError) {
+				t.Errorf("Expected error %v, got %v", test.wantedError, err)
+			}
+
+		})
+
+	}
 }
