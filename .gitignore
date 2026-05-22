@@ -1,4 +1,4 @@
 .env
 go.sum
 .DS_Store
-frontend/
+frontend/coverage.out
