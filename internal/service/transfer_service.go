@@ -79,7 +79,7 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 
 		}
 
-		transfer := domain.Transfer{
+		transfer1 := domain.Transfer{
 			TransactionId:     mp[req.SenderAccountId],
 			SenderAccountId:   req.SenderAccountId,
 			ReceiverAccountId: req.ReceiverAccountId,
@@ -87,7 +87,15 @@ func (t *transferService) Create(ctx context.Context, req dto.CreateTransferRequ
 			Amount:            req.Amount,
 		}
 
-		if err = t.transferRepo.Create(ctx, transfer); err != nil {
+		transfer2 := domain.Transfer{
+			TransactionId:     mp[req.ReceiverAccountId],
+			SenderAccountId:   req.SenderAccountId,
+			ReceiverAccountId: req.ReceiverAccountId,
+			CurrencyId:        req.CurrencyId,
+			Amount:            req.Amount,
+		}
+
+		if err = t.transferRepo.Create(ctx, transfer1, transfer2); err != nil {
 			return err
 		}
 
