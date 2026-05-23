@@ -55,13 +55,17 @@ type fakeAccountRepo struct {
 	account1 domain.Account
 	account2 domain.Account
 
+	account domain.Account
+
 	selectTwoAccountsForUpdateError error
 	increaseBalanceError            error
 	decreaseBalanceError            error
+	getByIdForUpdateError           error
 
 	calledSelectTwoAccountForUpdate bool
 	calledIncreaseBalance           bool
 	calledDecreaseBalance           bool
+	calledGetByIdForUpdate          bool
 }
 
 func (ac *fakeAccountRepo) SelectTwoAccountsForUpdate(ctx context.Context, senderAccountId int, receiverAccountId int) (domain.Account, domain.Account, error) {
@@ -102,7 +106,12 @@ func (ac *fakeAccountRepo) GetAll(ctx context.Context) ([]domain.Account, error)
 }
 
 func (ac *fakeAccountRepo) GetByIdForUpdate(ctx context.Context, id int) (domain.Account, error) {
-	return domain.Account{}, nil
+	ac.calledGetByIdForUpdate = true
+
+	if ac.getByIdForUpdateError != nil {
+		return domain.Account{}, ac.getByIdForUpdateError
+	}
+	return ac.account, nil
 }
 
 func (ac *fakeAccountRepo) GetUserAccounts(ctx context.Context, userId int) ([]domain.Account, error) {
