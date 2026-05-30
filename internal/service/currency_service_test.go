@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/alanzhumalin/bank/internal/domain"
@@ -24,6 +25,8 @@ type fakeCurrencyRepo struct {
 	updateByIdErr error
 	existsErr     error
 	getAllErr     error
+
+	exists bool
 }
 
 func (cr *fakeCurrencyRepo) Create(ctx context.Context, c domain.Сurrency) error {
@@ -66,10 +69,10 @@ func (cr *fakeCurrencyRepo) Exists(ctx context.Context, code string) (bool, erro
 	cr.existsCalled = true
 
 	if cr.existsErr != nil {
-		return true, cr.existsErr
+		return false, cr.existsErr
 	}
 
-	return false, nil
+	return cr.exists, nil
 }
 func (cr *fakeCurrencyRepo) GetAll(ctx context.Context) ([]domain.Сurrency, error) {
 	cr.getAllCalled = true
@@ -106,5 +109,125 @@ func TestCurrencyServiceCreateSuccess(t *testing.T) {
 
 	if !currencyRepository.createdCalled {
 		t.Fatal("Expected called create")
+	}
+}
+
+func TestCurrencyServiceCreateErrors(t *testing.T) {
+	tests := []struct {
+		name         string
+		wantedErr    error
+		req          dto.CreateNewCurrencyRequest
+		existsCalled bool
+		createCalled bool
+		setup        func(repo *fakeCurrencyRepo)
+	}{
+		{
+			name:      "check for existence of currency",
+			wantedErr: domain.ErrorCurrencyAlreadyExists,
+			req: dto.CreateNewCurrencyRequest{
+				Name:   "American dollar",
+				Code:   "USD",
+				Symbol: "$",
+			},
+			existsCalled: true,
+			createCalled: false,
+			setup: func(repo *fakeCurrencyRepo) {
+				repo.exists = true
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			currencyRepo := &fakeCurrencyRepo{}
+
+			test.setup(currencyRepo)
+
+			srv := NewCurrencyService(currencyRepo)
+
+			err := srv.Create(context.Background(), test.req)
+
+			if !errors.Is(err, test.wantedErr) {
+				t.Fatalf("Expected %v, got %v", test.wantedErr, err)
+			}
+
+			if test.createCalled != currencyRepo.createdCalled {
+				t.Fatalf("Expected createdCalled %v, got %v", test.createCalled, currencyRepo.createdCalled)
+			}
+
+			if test.existsCalled != currencyRepo.existsCalled {
+				t.Fatalf("Expected exists called %v, got %v", test.existsCalled, currencyRepo.existsCalled)
+			}
+		})
+	}
+}
+
+func TestCurrencyServiceCreateRepoErrors(t *testing.T) {
+	tests := []struct {
+		name         string
+		wantedErr    error
+		req          dto.CreateNewCurrencyRequest
+		calledExists bool
+		calledCreate bool
+		setup        func(repo *fakeCurrencyRepo)
+	}{
+		{
+			name:      "Error in exists db",
+			wantedErr: ErrorDb,
+			req: dto.CreateNewCurrencyRequest{
+				Name:   "American dollar",
+				Code:   "USD",
+				Symbol: "$",
+			},
+			calledExists: true,
+			calledCreate: false,
+			setup: func(repo *fakeCurrencyRepo) {
+				repo.existsErr = ErrorDb
+			},
+		},
+
+		{
+			name:      "Error in create currency db",
+			wantedErr: ErrorDb,
+			req: dto.CreateNewCurrencyRequest{
+				Name:   "American dollar",
+				Code:   "USD",
+				Symbol: "$",
+			},
+			calledExists: true,
+			calledCreate: true,
+			setup: func(repo *fakeCurrencyRepo) {
+				repo.createErr = ErrorDb
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+
+		t.Run(test.name, func(t *testing.T) {
+			currencyRepository := &fakeCurrencyRepo{}
+
+			test.setup(currencyRepository)
+
+			srv := NewCurrencyService(currencyRepository)
+
+			err := srv.Create(context.Background(), test.req)
+
+			if !errors.Is(err, test.wantedErr) {
+				t.Fatalf("Expected %v, got %v", test.wantedErr, err)
+			}
+
+			if test.calledExists != currencyRepository.existsCalled {
+				t.Fatalf("Expected calledExists %v, got %v", test.calledExists, currencyRepository.existsCalled)
+			}
+
+			if test.calledCreate != currencyRepository.createdCalled {
+				t.Fatalf("Expected calledCreate %v, got %v", test.calledCreate, currencyRepository.createdCalled)
+			}
+
+		})
 	}
 }
