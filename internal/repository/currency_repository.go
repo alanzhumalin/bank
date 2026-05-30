@@ -69,19 +69,15 @@ func (c *currentRepository) UpdateById(ctx context.Context, id int, name string,
 }
 
 func (c *currentRepository) Exists(ctx context.Context, code string) (bool, error) {
-	var id int
+	var check bool
 
-	err := c.pool.QueryRow(ctx, `select id from currencies where code = $1`, code).Scan(&id)
+	err := c.pool.QueryRow(ctx, `select exists(select 1 from currencies where code = $1)`, code).Scan(&check)
 
-	if err == nil {
-		return true, nil
+	if err != nil {
+		return false, fmt.Errorf("Error exists in currency_repository: %w", err)
 	}
 
-	if errors.Is(err, pgx.ErrNoRows) {
-		return false, nil
-	}
-
-	return false, fmt.Errorf("Error exists in currency_repository: %w", err)
+	return check, nil
 
 }
 
