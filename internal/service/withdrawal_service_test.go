@@ -181,7 +181,7 @@ func TestWithdrawalErrors(t *testing.T) {
 				t.Fatalf("Expected wantWithdrawalCreateCalled: %v, got %v", test.wantWithdrawalCreateCalled, withdrawalRepo.createCalled)
 			}
 
-			if test.wantMarkTransactionCalled != transactionRepo.calledCreate {
+			if test.wantMarkTransactionCalled != transactionRepo.calledMarkTransaction {
 				t.Fatalf("Expected wantMarkTransactionCalled: %v, got %v", test.wantMarkTransactionCalled, transactionRepo.calledCreate)
 			}
 
@@ -482,7 +482,7 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 			}
 
 			if test.wantWithdrawalCreateCalled != withdrawalRepo.createCalled {
-				t.Fatalf("Expected wantWithdrawalCreateCalled: %v, got %v", test.wantDecreaseBalanceCalled, withdrawalRepo.createCalled)
+				t.Fatalf("Expected wantWithdrawalCreateCalled: %v, got %v", test.wantWithdrawalCreateCalled, withdrawalRepo.createCalled)
 			}
 
 			if test.wantMarkTransactionCalled != transactionRepo.calledMarkTransaction {
