@@ -48,10 +48,13 @@ func (d *depositHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.NewDecoder(r.Body).Decode(&req)
-
-	if err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.WriteError(w, http.StatusBadRequest, "invalid json")
+		return
+	}
+
+	if err = req.Validate(); err != nil {
+		response.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
