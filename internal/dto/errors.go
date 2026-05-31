@@ -39,3 +39,8 @@ var (
 	UserIdNotFound    = errors.New("User id not found")
 	RoleNotFound      = errors.New("Role not found")
 )
+
+var (
+	ErrorAmountIsRequired        = errors.New("Deposit amount is required")
+	ErrorDepositSourceIsRequired = errors.New("Deposit source is required")
+)
