@@ -21,7 +21,7 @@ jobs:
 
 
       - name: go mod install
-        run: go mod tidy
+        run: go mod download
       
       - name: test
         run: go test ./...
