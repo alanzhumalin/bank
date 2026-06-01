@@ -18,6 +18,10 @@ jobs:
         uses: actions/setup-go@v5
         with: 
           go-version-file: go.mod
+
+
+      - name: go mod install
+        run: go mod tidy
       
       - name: test
         run: go test ./...
