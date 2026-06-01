@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,10 +25,6 @@ type fakeCurrencyService struct {
 	getAllError  error
 	getByIdError error
 }
-
-var (
-	DbError = errors.New("Db error")
-)
 
 func (c *fakeCurrencyService) Create(ctx context.Context, req dto.CreateNewCurrencyRequest) error {
 	c.createCalled = true
