@@ -1,0 +1,26 @@
+name: Go ci 
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Load code into runner
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with: 
+          go-version-file: go.mod
+      
+      - name: test
+        run: go test ./...
+      
+      - name: vet
+        run: go vet ./...
