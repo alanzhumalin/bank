@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -26,7 +27,8 @@ func main() {
 
 	//connect to db, we need to get config from environment
 	godotenv.Load()
-	cfg, err := config.NewConfig(os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_HOST"), os.Getenv("TOKEN_KEY"))
+
+	cfg, err := config.NewConfig(os.Getenv("REDIS_PASSWORD"), os.Getenv("REDIS_ADDRESS"), os.Getenv("REDIS_DB"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"), os.Getenv("DB_HOST"), os.Getenv("TOKEN_KEY"))
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error occured while getting environment files")
 		os.Exit(1)
@@ -41,6 +43,28 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error occured while connecting to db")
 	}
+
+	redisDbInt, _ := strconv.Atoi(cfg.RedisDb)
+
+	redisClient, err := db.InitRedisClient(cfg.RedisAddress, cfg.RedisPassword, redisDbInt)
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error occured while initializing redis client")
+		os.Exit(1)
+	}
+
+	defer redisClient.Close()
+
+	// duration := 1 * time.Minute
+	// limitReq := int64(10)
+
+	// rateLimiter, err := cache.NewRateLimiter(redisClient, limitReq, duration)
+	// rateLimitMiddlewareFactory, err := middleware.NewRateLimiterMiddleware(rateLimiter)
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error occured with initializing the middleware")
+	}
+	// rateLimitMiddleware := rateLimitMiddlewareFactory.RateLimiterMiddleware()
 
 	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey).Middleware()
 	rbac := middleware.NewRbacMiddleware().RBAC
