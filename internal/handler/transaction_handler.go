@@ -26,11 +26,11 @@ func NewTransactionHandler(service service.TransactionService, logger zerolog.Lo
 	}
 }
 
-func TransactionRouter(th *transactionHandler, auth middleware.Middleware, rbac func(...string) middleware.Middleware) http.Handler {
+func TransactionRouter(th *transactionHandler, auth middleware.Middleware, ratelimit middleware.Middleware, rbac func(...string) middleware.Middleware) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /{account_id}", middleware.Chain(http.HandlerFunc(th.GetByAccountId), auth))
-	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(th.GetByUserId), auth))
+	mux.Handle("GET /{account_id}", middleware.Chain(http.HandlerFunc(th.GetByAccountId), auth, ratelimit))
+	mux.Handle("GET /", middleware.Chain(http.HandlerFunc(th.GetByUserId), auth, ratelimit))
 
 	return mux
 }

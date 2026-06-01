@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/alanzhumalin/bank/internal/cache"
 	"github.com/alanzhumalin/bank/internal/config"
 	"github.com/alanzhumalin/bank/internal/db"
 	"github.com/alanzhumalin/bank/internal/handler"
@@ -55,16 +56,16 @@ func main() {
 
 	defer redisClient.Close()
 
-	// duration := 1 * time.Minute
-	// limitReq := int64(10)
+	duration := 1 * time.Minute
+	limitReq := int64(10)
 
-	// rateLimiter, err := cache.NewRateLimiter(redisClient, limitReq, duration)
-	// rateLimitMiddlewareFactory, err := middleware.NewRateLimiterMiddleware(rateLimiter)
+	rateLimiter, err := cache.NewRateLimiter(redisClient, limitReq, duration)
+	rateLimitMiddlewareFactory, err := middleware.NewRateLimiterMiddleware(rateLimiter)
 
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error occured with initializing the middleware")
 	}
-	// rateLimitMiddleware := rateLimitMiddlewareFactory.RateLimiterMiddleware()
+	rateLimitMiddleware := rateLimitMiddlewareFactory.RateLimiterMiddleware()
 
 	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey).Middleware()
 	rbac := middleware.NewRbacMiddleware().RBAC
@@ -84,7 +85,7 @@ func main() {
 	transactionRepository := repository.NewTransactionRepository(pool)
 	transactionService := service.NewTransactionService(transactionRepository)
 	transactionHandler := handler.NewTransactionHandler(transactionService, logger)
-	transactionRouter := handler.TransactionRouter(transactionHandler, authMiddleware, rbac)
+	transactionRouter := handler.TransactionRouter(transactionHandler, authMiddleware, rateLimitMiddleware, rbac)
 
 	accountRepository := repository.NewAccountRepository(pool)
 	accountService := service.NewAccountService(accountRepository)
