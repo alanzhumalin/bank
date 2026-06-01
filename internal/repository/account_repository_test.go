@@ -8,6 +8,7 @@ import (
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shopspring/decimal"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
@@ -272,6 +273,54 @@ func TestAccountRepositorySelectTwoForUpdateWithTx(t *testing.T) {
 
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("Expected to be error: %v, got %v", context.DeadlineExceeded, err)
+	}
+
+}
+
+func TestAccountRepositoryIncreaseBalance(t *testing.T) {
+	ctx := context.Background()
+	pool := runDb(t, ctx)
+	initializeDb(t, pool, ctx)
+
+	repository := NewAccountRepository(pool)
+	acc, err := repository.GetByIdForUpdate(ctx, 1)
+
+	if err != nil {
+		t.Fatalf("Occured error: %v", err)
+	}
+
+	if err := repository.IncreaseBalance(ctx, decimal.NewFromInt(1000), 1); err != nil {
+		t.Fatalf("Occured error: %v", err)
+	}
+
+	updatedAcc, err := repository.GetByIdForUpdate(ctx, 1)
+
+	if !acc.Balance.Add(decimal.NewFromInt(1000)).Equal(updatedAcc.Balance) {
+		t.Fatalf("Expected to be equal")
+	}
+
+}
+
+func TestAccountRepositoryDecreaseBalance(t *testing.T) {
+	ctx := context.Background()
+	pool := runDb(t, ctx)
+	initializeDb(t, pool, ctx)
+
+	repository := NewAccountRepository(pool)
+	acc, err := repository.GetByIdForUpdate(ctx, 1)
+
+	if err != nil {
+		t.Fatalf("Occured error: %v", err)
+	}
+
+	if err := repository.DecreaseBalance(ctx, decimal.NewFromInt(1000), 1); err != nil {
+		t.Fatalf("Occured error: %v", err)
+	}
+
+	updatedAcc, err := repository.GetByIdForUpdate(ctx, 1)
+
+	if !acc.Balance.Sub(decimal.NewFromInt(1000)).Equal(updatedAcc.Balance) {
+		t.Fatalf("Expected to be equal")
 	}
 
 }
