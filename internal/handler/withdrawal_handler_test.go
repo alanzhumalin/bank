@@ -41,7 +41,8 @@ func TestWithdrawalHandlerCreateSuccess(t *testing.T) {
 		{
 			"account_id": 1,
 			"amount": 123123, 
-			"source": "terminal"
+			"source": "terminal",
+			"idempotency_key": "msodfmomomo1m3o21m3"
 		}
 	`)
 
@@ -89,7 +90,8 @@ func TestWithdrawalCreateMissingAccountId(t *testing.T) {
 	body := strings.NewReader(`
 		{
 			"amount": 123123, 
-			"source": "terminal"
+			"source": "terminal",
+			"idempotency_key": "msodfmomomo1m3o21m3"
 		}
 	`)
 
@@ -120,7 +122,8 @@ func TestWithdrawalCreateError(t *testing.T) {
 		{
 			"account_id": 1,
 			"amount": 123123, 
-			"source": "terminal"
+			"source": "terminal",
+			"idempotency_key": "msodfmomomo1m3o21m3"
 		}
 	`)
 

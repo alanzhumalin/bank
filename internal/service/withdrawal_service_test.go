@@ -41,9 +41,10 @@ func TestWithdrawalCreateSuccess(t *testing.T) {
 	}
 	transactionRepo := &fakeTransactionRepo{}
 	req := dto.CreateWindrawalRequest{
-		AccountId: 1,
-		Amount:    decimal.NewFromInt(100000),
-		Source:    "terminal",
+		AccountId:      1,
+		Amount:         decimal.NewFromInt(100000),
+		Source:         "terminal",
+		IdempotencyKey: "1kok1o3ko1k3o12ko31o23",
 	}
 	srv := NewWithdrawalService(withdrawRepo, txManager, accountRepo, transactionRepo)
 
@@ -92,9 +93,10 @@ func TestWithdrawalErrors(t *testing.T) {
 			name:        "Error account is not active",
 			wantedError: domain.AccountIsNotActive,
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(10000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(10000),
+				Source:         "terminal",
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
 			},
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
 				accountRepo.account = domain.Account{
@@ -120,7 +122,7 @@ func TestWithdrawalErrors(t *testing.T) {
 			req: dto.CreateWindrawalRequest{
 				AccountId: 1,
 				Amount:    decimal.NewFromInt(10000),
-				Source:    "terminal",
+				Source:    "terminal", IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
 			},
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
 				accountRepo.account = domain.Account{
@@ -205,9 +207,10 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error withtx db",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				Source:         "terminal",
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
 			},
 			wantError: ErrorDb,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -232,9 +235,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error getbyidforupdate db",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: ErrorDb,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -259,9 +264,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error getbyidforupdate account not found",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: domain.AccountNotFound,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -286,9 +293,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error transaction create db",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: ErrorDb,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -313,9 +322,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error decrease balance db",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: ErrorDb,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -340,9 +351,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error decrease balance account not found",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: domain.AccountNotFound,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -367,9 +380,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error withdrawal create db",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: ErrorDb,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -394,9 +409,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error mark transaction db",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: ErrorDb,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
@@ -421,9 +438,11 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 		{
 			name: "Error mark transaction not found",
 			req: dto.CreateWindrawalRequest{
-				AccountId: 1,
-				Amount:    decimal.NewFromInt(1000),
-				Source:    "terminal",
+				AccountId:      1,
+				Amount:         decimal.NewFromInt(1000),
+				IdempotencyKey: "kfmskmksdmkfdskfmksdfmk",
+
+				Source: "terminal",
 			},
 			wantError: domain.ErrorTransactionNotFound,
 			setup: func(withdrawalRepo *fakeWithdrawalRepo, txManager *fakeTxManager, accountRepo *fakeAccountRepo, transactionRepo *fakeTransactionRepo) {
