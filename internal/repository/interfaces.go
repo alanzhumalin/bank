@@ -79,3 +79,9 @@ type AuthRepository interface {
 	Update(ctx context.Context, newHashedToken string, expires_at time.Time, sessionId string) error
 	GetSessionById(ctx context.Context, sessionId string) (domain.Session, error)
 }
+
+type IdempotencyRepository interface {
+	Exists(ctx context.Context, key string) (bool, error)
+	Start(ctx context.Context, idempotency domain.Idempotency) error
+	Complete(ctx context.Context, idempotency domain.Idempotency) error
+}
