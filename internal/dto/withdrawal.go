@@ -11,9 +11,10 @@ import "github.com/shopspring/decimal"
 // );
 
 type CreateWindrawalRequest struct {
-	AccountId int             `json:"account_id"`
-	Amount    decimal.Decimal `json:"amount"`
-	Source    string          `json:"source"`
+	AccountId      int             `json:"account_id"`
+	Amount         decimal.Decimal `json:"amount"`
+	Source         string          `json:"source"`
+	IdempotencyKey string          `json:"idempotency_key"`
 }
 
 func (c *CreateWindrawalRequest) Validate() error {
@@ -26,6 +27,10 @@ func (c *CreateWindrawalRequest) Validate() error {
 
 	if c.Source == "" {
 		return ErrorSourceRequired
+	}
+
+	if c.IdempotencyKey == "" {
+		return ErrorIdempotencyKeyIsRequired
 	}
 
 	return nil
