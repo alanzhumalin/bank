@@ -44,3 +44,5 @@ var (
 	ErrorAmountIsRequired        = errors.New("Deposit amount is required")
 	ErrorDepositSourceIsRequired = errors.New("Deposit source is required")
 )
+
+var ErrorIdempotencyKeyIsRequired = errors.New("Idempotency key is required")

@@ -42,3 +42,8 @@ var (
 var (
 	ErrorNoAccounts = errors.New("User has no accounts")
 )
+
+var (
+	ErrorNoRowsInserted = errors.New("No rows inserted")
+	ErrorNoRowsChanged  = errors.New("No rows changed")
+)
