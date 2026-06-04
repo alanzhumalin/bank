@@ -73,9 +73,9 @@ func main() {
 
 	txManager := repository.NewTxManager(pool)
 
-	// idempotencyRepo := repository.NewIdempotencyRepo(pool)
+	idempotencyRepo := repository.NewIdempotencyRepo(pool)
 
-	// idempotencyRedis, err := cache.NewIdempotencyStore(redisClient, time.Duration(1*time.Minute), time.Duration(30*time.Minute), time.Duration(1*24*time.Hour))
+	idempotencyRedis, err := cache.NewIdempotencyStore(redisClient, time.Duration(1*time.Minute), time.Duration(30*time.Minute), time.Duration(1*24*time.Hour))
 
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Error occured initializing the idempotency redis")
@@ -115,8 +115,8 @@ func main() {
 	transferRouter := handler.TransferRouter(transferHandler, authMiddleware)
 
 	withdrawalRepository := repository.NewWithdrawalRepository(pool)
-	withdrawalService := service.NewWithdrawalService(withdrawalRepository, txManager, accountRepository, transactionRepository)
-	withdrawalHandler := handler.NewWithDrawalHandler(withdrawalService, logger)
+	withdrawalService := service.NewWithdrawalService(idempotencyRepo, withdrawalRepository, txManager, accountRepository, transactionRepository)
+	withdrawalHandler := handler.NewWithDrawalHandler(idempotencyRedis, withdrawalService, logger)
 	withdrawalRouter := handler.WithdrawalRouter(withdrawalHandler, authMiddleware)
 
 	depositRepository := repository.NewDepositRepository(pool)
