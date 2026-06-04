@@ -45,6 +45,8 @@ func main() {
 		logger.Fatal().Err(err).Msg("Error occured while connecting to db")
 	}
 
+	defer pool.Close()
+
 	redisDbInt, _ := strconv.Atoi(cfg.RedisDb)
 
 	redisClient, err := db.InitRedisClient(cfg.RedisAddress, cfg.RedisPassword, redisDbInt)
@@ -67,10 +69,25 @@ func main() {
 	}
 	rateLimitMiddleware := rateLimitMiddlewareFactory.RateLimiterMiddleware()
 
-	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey).Middleware()
 	rbac := middleware.NewRbacMiddleware().RBAC
 
 	txManager := repository.NewTxManager(pool)
+
+	// idempotencyRepo := repository.NewIdempotencyRepo(pool)
+
+	// idempotencyRedis, err := cache.NewIdempotencyStore(redisClient, time.Duration(1*time.Minute), time.Duration(30*time.Minute), time.Duration(1*24*time.Hour))
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error occured initializing the idempotency redis")
+		os.Exit(1)
+	}
+	blackListTokenRedis, err := cache.NewTokenBlackList(redisClient)
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error occured initializing the black token redis")
+		os.Exit(1)
+	}
+	authMiddleware := middleware.NewAuthMiddleWare(&cfg.TokenKey, blackListTokenRedis).Middleware()
 
 	userRepository := repository.NewUserRepository(pool)
 	userService := service.NewUserService(userRepository, logger)
@@ -108,7 +125,7 @@ func main() {
 	depositRouter := handler.DepositRouter(depositHandler)
 
 	authRepository := repository.NewAuthRepository(pool)
-	authService := service.NewAuthService(&cfg.TokenKey, authRepository, userService, txManager)
+	authService := service.NewAuthService(blackListTokenRedis, &cfg.TokenKey, authRepository, userService, txManager)
 	authHandler := handler.NewAuthHandler(userService, authService, logger)
 	authRouter := handler.AuthRouter(authHandler, authMiddleware)
 
