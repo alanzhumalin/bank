@@ -14,40 +14,42 @@ type idempotencyRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewIdempotencyStore(pool *pgxpool.Pool) IdempotencyRepository {
+func NewIdempotencyRepo(pool *pgxpool.Pool) IdempotencyRepository {
 	return &idempotencyRepository{
 		pool: pool,
 	}
 }
 
-func (i *idempotencyRepository) Exists(ctx context.Context, key string) (bool, error) {
+func (i *idempotencyRepository) GetByKey(ctx context.Context, key string, userId int) (domain.Idempotency, error) {
 	q := querier(ctx, i.pool)
-	var ok bool
-	err := q.QueryRow(ctx, `select exists(select 1 from idempotency_keys where idempotency_key = $1)`, key).Scan(&ok)
+	var idempotency domain.Idempotency
+	err := q.QueryRow(ctx, `select id, transaction_id, user_id, idempotency_key, operation, status, response, updated_at, created_at from idempotency_keys where user_id = $1 and idempotency_key = $2`, userId, key).Scan(
+		&idempotency.Id, &idempotency.TransactionId, &idempotency.UserId, &idempotency.IdempotencyKey, &idempotency.Operation, &idempotency.Status, &idempotency.Response, &idempotency.UpdatedAt, &idempotency.CreatedAt,
+	)
 
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return false, fmt.Errorf("get idempotency key: %w", err)
+	if err == nil {
+		return idempotency, nil
 	}
 
-	if ok {
-		return true, nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.Idempotency{}, domain.ErrorIdempotencyKeyNotFound
 	}
 
-	return false, nil
+	return domain.Idempotency{}, fmt.Errorf("Error in getting idempotency key: %w", err)
 
 }
 
 func (i *idempotencyRepository) Start(ctx context.Context, idempotency domain.Idempotency) error {
 	q := querier(ctx, i.pool)
 
-	commandTag, err := q.Exec(ctx, `insert into idempotency_keys(user_id, idempotency_key, operation) values($1, $2, $3)`, idempotency.UserId, idempotency.IdempotencyKey, idempotency.Operation)
+	commandTag, err := q.Exec(ctx, `insert into idempotency_keys(user_id, idempotency_key, operation) values($1, $2, $3) on conflict (user_id, idempotency_key) do nothing`, idempotency.UserId, idempotency.IdempotencyKey, idempotency.Operation)
 
 	if err != nil {
-		return fmt.Errorf("Error in start of creating idempotency key: %w", err)
+		return err
 	}
 
 	if commandTag.RowsAffected() == 0 {
-		return domain.ErrorNoRowsInserted
+		return domain.ErrorIdempotencyAlreadyExists
 	}
 
 	return nil
@@ -56,8 +58,8 @@ func (i *idempotencyRepository) Start(ctx context.Context, idempotency domain.Id
 func (i *idempotencyRepository) Complete(ctx context.Context, idempotency domain.Idempotency) error {
 	q := querier(ctx, i.pool)
 
-	commandTag, err := q.Exec(ctx, `update idempotency_keys set transaction_id = $1, status = $2, response = $3,updated_at = $4 where idempotency_key = $5`,
-		idempotency.TransactionId, idempotency.Status, idempotency.Response, idempotency.UpdatedAt,
+	commandTag, err := q.Exec(ctx, `update idempotency_keys set transaction_id = $1, status = $2, response = $3,updated_at = $4 where idempotency_key = $5 and user_id = $6`,
+		idempotency.TransactionId, idempotency.Status, idempotency.Response, idempotency.UpdatedAt, idempotency.IdempotencyKey, idempotency.UserId,
 	)
 
 	if err != nil {
