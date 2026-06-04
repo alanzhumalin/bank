@@ -81,7 +81,7 @@ type AuthRepository interface {
 }
 
 type IdempotencyRepository interface {
-	Exists(ctx context.Context, key string) (bool, error)
+	GetByKey(ctx context.Context, key string, userId int) (domain.Idempotency, error)
 	Start(ctx context.Context, idempotency domain.Idempotency) error
 	Complete(ctx context.Context, idempotency domain.Idempotency) error
 }
