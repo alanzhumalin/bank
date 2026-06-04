@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type Claims struct {
 	UserId    int
 	Role      string
 	SessionId string
+	JTI       string
 	jwt.RegisteredClaims
 }
 
@@ -23,6 +25,7 @@ func GeneratateAccessToken(userId int, role string, sessionId string, tokenKey s
 		UserId:    userId,
 		Role:      role,
 		SessionId: sessionId,
+		JTI:       uuid.NewString(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(15 * time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -50,6 +53,7 @@ func GeneratateRefreshToken(userId int, role string, sessionId string, tokenKey 
 		UserId:    userId,
 		Role:      role,
 		SessionId: sessionId,
+		JTI:       uuid.NewString(),
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: expiresAt,
 			IssuedAt:  issuedAt,

@@ -6,18 +6,21 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/alanzhumalin/bank/internal/cache"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/pkg/jwt"
 	"github.com/alanzhumalin/bank/pkg/response"
 )
 
 type AuthMiddleware struct {
-	TokenKey *string
+	TokenKey       *string
+	TokenBlackList cache.TokenBlackList
 }
 
-func NewAuthMiddleWare(tokenKey *string) *AuthMiddleware {
+func NewAuthMiddleWare(tokenKey *string, tokenBlackList cache.TokenBlackList) *AuthMiddleware {
 	return &AuthMiddleware{
-		TokenKey: tokenKey,
+		TokenKey:       tokenKey,
+		TokenBlackList: tokenBlackList,
 	}
 }
 
@@ -27,19 +30,19 @@ func (a *AuthMiddleware) Middleware() Middleware {
 			header := r.Header.Get("Authorization")
 
 			if header == "" {
-				response.WriteJson(w, http.StatusForbidden, "forbidden")
+				response.WriteJson(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 
-			parts := strings.Split(header, " ")
+			parts := strings.Fields(header)
 
 			if len(parts) != 2 {
-				response.WriteJson(w, http.StatusForbidden, "forbidden")
+				response.WriteJson(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 
 			if parts[0] != "Bearer" {
-				response.WriteJson(w, http.StatusForbidden, "forbidden")
+				response.WriteJson(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 
@@ -51,15 +54,28 @@ func (a *AuthMiddleware) Middleware() Middleware {
 					response.WriteJson(w, http.StatusUnauthorized, "unauthorized")
 
 				default:
-					response.WriteJson(w, http.StatusUnauthorized, "Not authorized")
+					response.WriteJson(w, http.StatusUnauthorized, "unauthorized")
 				}
 
+				return
+			}
+
+			ok, err := a.TokenBlackList.Exists(r.Context(), claims.JTI)
+			if err != nil {
+				response.WriteJson(w, http.StatusInternalServerError, "internal server error")
+				return
+			}
+
+			if ok {
+				response.WriteJson(w, http.StatusUnauthorized, "unauthorized")
 				return
 			}
 
 			ctx := context.WithValue(r.Context(), dto.UserKey{}, claims.UserId)
 			ctx = context.WithValue(ctx, dto.RoleKey{}, claims.Role)
 			ctx = context.WithValue(ctx, dto.SessionKey{}, claims.SessionId)
+			ctx = context.WithValue(ctx, dto.JTIKey{}, claims.JTI)
+			ctx = context.WithValue(ctx, dto.ExpKey{}, claims.ExpiresAt.Time)
 
 			r = r.WithContext(ctx)
 

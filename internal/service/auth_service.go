@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/alanzhumalin/bank/internal/cache"
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/repository"
@@ -18,10 +19,11 @@ type authService struct {
 	authRepository repository.AuthRepository
 	txManager      repository.TxManagerRepository
 	userService    UserService
+	blackListToken cache.TokenBlackList
 }
 
-func NewAuthService(tokenKey *string, authRepository repository.AuthRepository, userService UserService, txManager repository.TxManagerRepository) AuthService {
-	return &authService{tokenKey: tokenKey, authRepository: authRepository, userService: userService, txManager: txManager}
+func NewAuthService(blackListToken cache.TokenBlackList, tokenKey *string, authRepository repository.AuthRepository, userService UserService, txManager repository.TxManagerRepository) AuthService {
+	return &authService{blackListToken: blackListToken, tokenKey: tokenKey, authRepository: authRepository, userService: userService, txManager: txManager}
 }
 
 func (a *authService) Register(ctx context.Context, req dto.RegisterRequest, ip string, device string) (*dto.TokenPair, error) {
@@ -193,8 +195,19 @@ func (a *authService) UpdateSession(ctx context.Context, req dto.RefreshRequest)
 
 }
 
-func (a *authService) Logout(ctx context.Context, sessionId string) error {
-	return a.authRepository.Revoke(ctx, sessionId)
+func (a *authService) Logout(ctx context.Context, sessionId string, jti string, exp time.Time) error {
+	if err := a.authRepository.Revoke(ctx, sessionId); err != nil {
+		return err
+	}
+
+	ttl := time.Until(exp)
+
+	if ttl > 0 {
+		if err := a.blackListToken.Add(ctx, jti, ttl+(10*time.Second)); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (a *authService) LogoutFromAllDevices(ctx context.Context, userId int) error {
