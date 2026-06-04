@@ -57,3 +57,7 @@ type UserKey struct{}
 type RoleKey struct{}
 
 type SessionKey struct{}
+
+type JTIKey struct {
+}
+type ExpKey struct{}
