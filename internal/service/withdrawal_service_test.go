@@ -22,14 +22,26 @@ type fakeIdempotencyrepo struct {
 type fakeIdempotencyRedis struct {
 }
 
-func (f *fakeIdempotencyRedis) Start(ctx context.Context, key string, res dto.IdempotencyResponse) (bool, dto.IdempotencyResponse, error)
-func (f *fakeIdempotencyRedis) Complete(ctx context.Context, key string, res dto.IdempotencyResponse) error
+func (f *fakeIdempotencyRedis) Start(ctx context.Context, key string, res dto.IdempotencyResponse) (bool, dto.IdempotencyResponse, error) {
+	return false, dto.IdempotencyResponse{}, nil
+}
+func (f *fakeIdempotencyRedis) Complete(ctx context.Context, key string, res dto.IdempotencyResponse) error {
+	return nil
+}
 
-func (f *fakeIdempotencyRedis) Failed(ctx context.Context, key string, res dto.IdempotencyResponse) error
+func (f *fakeIdempotencyRedis) Failed(ctx context.Context, key string, res dto.IdempotencyResponse) error {
+	return nil
+}
 
-func (f *fakeIdempotencyrepo) GetByKey(ctx context.Context, key string, userId int) (domain.Idempotency, error)
-func (f *fakeIdempotencyrepo) Start(ctx context.Context, idempotency domain.Idempotency) error
-func (f *fakeIdempotencyrepo) Complete(ctx context.Context, idempotency domain.Idempotency) error
+func (f *fakeIdempotencyrepo) GetByKey(ctx context.Context, key string, userId int) (domain.Idempotency, error) {
+	return domain.Idempotency{}, nil
+}
+func (f *fakeIdempotencyrepo) Start(ctx context.Context, idempotency domain.Idempotency) error {
+	return nil
+}
+func (f *fakeIdempotencyrepo) Complete(ctx context.Context, idempotency domain.Idempotency) error {
+	return nil
+}
 
 func (wr *fakeWithdrawalRepo) Create(ctx context.Context, w domain.Withdrawal) error {
 	wr.createCalled = true
