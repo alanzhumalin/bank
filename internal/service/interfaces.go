@@ -40,7 +40,7 @@ type DepositService interface {
 }
 
 type WithdrawalService interface {
-	Create(ctx context.Context, req dto.CreateWindrawalRequest) error
+	Create(ctx context.Context, req dto.CreateWindrawalRequest, userId int) (dto.IdempotencyResponse, error)
 }
 
 type TransactionService interface {
