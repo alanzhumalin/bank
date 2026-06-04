@@ -17,12 +17,12 @@ import "time"
 
 type Idempotency struct {
 	Id             int
-	TransactionId  int
+	TransactionId  *int
 	UserId         int
 	IdempotencyKey string
 	Operation      string
 	Status         string
 	Response       []byte
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 	CreatedAt      time.Time
 }
