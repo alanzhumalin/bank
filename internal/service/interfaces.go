@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
@@ -53,5 +54,5 @@ type AuthService interface {
 	Login(ctx context.Context, req dto.LoginRequest, ip string, device string) (*dto.TokenPair, error)
 	UpdateSession(ctx context.Context, req dto.RefreshRequest) (*dto.TokenPair, string, error)
 	LogoutFromAllDevices(ctx context.Context, userId int) error
-	Logout(ctx context.Context, sessionId string) error
+	Logout(ctx context.Context, sessionId string, jti string, exp time.Time) error
 }
