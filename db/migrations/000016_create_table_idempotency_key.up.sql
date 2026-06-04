@@ -14,6 +14,6 @@ create table if not exists idempotency_keys(
     status text not null DEFAULT 'pending',
     response JSONB,
     created_at TIMESTAMPTZ not null DEFAULT now(),
-    updated_at TIMESTAMPTZ not null,
+    updated_at TIMESTAMPTZ,
     UNIQUE(user_id, idempotency_key)
 );
