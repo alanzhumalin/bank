@@ -46,3 +46,5 @@ var (
 )
 
 var ErrorIdempotencyKeyIsRequired = errors.New("Idempotency key is required")
+var ChallengeIdIsRequired = errors.New("Challenge id is required")
+var CodeHashIsRequired = errors.New("Code hash is required")
