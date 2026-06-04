@@ -12,6 +12,15 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type fakeIdempotencyRedis struct {
+}
+
+func (f *fakeIdempotencyRedis) Start(ctx context.Context, key string, res dto.IdempotencyResponse) (bool, dto.IdempotencyResponse, error)
+func (f *fakeIdempotencyRedis) Complete(ctx context.Context, key string, res dto.IdempotencyResponse) error
+
+func (f *fakeIdempotencyRedis) Failed(ctx context.Context, key string, res dto.IdempotencyResponse) error
+func (f *fakeIdempotencyRedis) Delete(ctx context.Context, key string) error
+
 type fakeWithdrawalService struct {
 	createCalled bool
 	createError  error
@@ -21,21 +30,22 @@ var (
 	DbError = errors.New("Db error")
 )
 
-func (w *fakeWithdrawalService) Create(ctx context.Context, req dto.CreateWindrawalRequest) error {
+func (w *fakeWithdrawalService) Create(ctx context.Context, req dto.CreateWindrawalRequest, userId int) (dto.IdempotencyResponse, error) {
 	w.createCalled = true
 
 	if w.createError != nil {
-		return w.createError
+		return dto.IdempotencyResponse{}, w.createError
 	}
 
-	return nil
+	return dto.IdempotencyResponse{}, nil
 }
 
 func TestWithdrawalHandlerCreateSuccess(t *testing.T) {
 	withdrawalService := &fakeWithdrawalService{}
+	idempotencyStore := &fakeIdempotencyRedis{}
 	logger := zerolog.Nop()
 
-	handler := NewWithDrawalHandler(withdrawalService, logger)
+	handler := NewWithDrawalHandler(idempotencyStore, withdrawalService, logger)
 
 	body := strings.NewReader(`
 		{
@@ -62,6 +72,7 @@ func TestWithdrawalHandlerCreateSuccess(t *testing.T) {
 
 func TestWithdrawalCreateInvalidJson(t *testing.T) {
 	withdrawalService := &fakeWithdrawalService{}
+	idempotencyStore := &fakeIdempotencyRedis{}
 	logger := zerolog.Nop()
 
 	body := strings.NewReader(`{bad json`)
@@ -69,7 +80,7 @@ func TestWithdrawalCreateInvalidJson(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/withdrawals/", body)
 	res := httptest.NewRecorder()
 
-	handler := NewWithDrawalHandler(withdrawalService, logger)
+	handler := NewWithDrawalHandler(idempotencyStore, withdrawalService, logger)
 
 	handler.Create(res, req)
 
@@ -85,6 +96,8 @@ func TestWithdrawalCreateInvalidJson(t *testing.T) {
 
 func TestWithdrawalCreateMissingAccountId(t *testing.T) {
 	withdrawalService := &fakeWithdrawalService{}
+	idempotencyStore := &fakeIdempotencyRedis{}
+
 	logger := zerolog.Nop()
 
 	body := strings.NewReader(`
@@ -98,7 +111,7 @@ func TestWithdrawalCreateMissingAccountId(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/withdrawals/", body)
 	res := httptest.NewRecorder()
 
-	handler := NewWithDrawalHandler(withdrawalService, logger)
+	handler := NewWithDrawalHandler(idempotencyStore, withdrawalService, logger)
 
 	handler.Create(res, req)
 
@@ -116,6 +129,8 @@ func TestWithdrawalCreateError(t *testing.T) {
 	withdrawalService := &fakeWithdrawalService{
 		createError: DbError,
 	}
+	idempotencyStore := &fakeIdempotencyRedis{}
+
 	logger := zerolog.Nop()
 
 	body := strings.NewReader(`
@@ -130,7 +145,7 @@ func TestWithdrawalCreateError(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/withdrawals/", body)
 	res := httptest.NewRecorder()
 
-	handler := NewWithDrawalHandler(withdrawalService, logger)
+	handler := NewWithDrawalHandler(idempotencyStore, withdrawalService, logger)
 
 	handler.Create(res, req)
 

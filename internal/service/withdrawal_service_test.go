@@ -16,6 +16,21 @@ type fakeWithdrawalRepo struct {
 	createError  error
 }
 
+type fakeIdempotencyrepo struct {
+}
+
+type fakeIdempotencyRedis struct {
+}
+
+func (f *fakeIdempotencyRedis) Start(ctx context.Context, key string, res dto.IdempotencyResponse) (bool, dto.IdempotencyResponse, error)
+func (f *fakeIdempotencyRedis) Complete(ctx context.Context, key string, res dto.IdempotencyResponse) error
+
+func (f *fakeIdempotencyRedis) Failed(ctx context.Context, key string, res dto.IdempotencyResponse) error
+
+func (f *fakeIdempotencyrepo) GetByKey(ctx context.Context, key string, userId int) (domain.Idempotency, error)
+func (f *fakeIdempotencyrepo) Start(ctx context.Context, idempotency domain.Idempotency) error
+func (f *fakeIdempotencyrepo) Complete(ctx context.Context, idempotency domain.Idempotency) error
+
 func (wr *fakeWithdrawalRepo) Create(ctx context.Context, w domain.Withdrawal) error {
 	wr.createCalled = true
 
@@ -29,6 +44,7 @@ func (wr *fakeWithdrawalRepo) Create(ctx context.Context, w domain.Withdrawal) e
 func TestWithdrawalCreateSuccess(t *testing.T) {
 	withdrawRepo := &fakeWithdrawalRepo{}
 	txManager := &fakeTxManager{}
+	idempotencyRepo := &fakeIdempotencyrepo{}
 	accountRepo := &fakeAccountRepo{
 		account: domain.Account{
 			Id:         1,
@@ -46,9 +62,9 @@ func TestWithdrawalCreateSuccess(t *testing.T) {
 		Source:         "terminal",
 		IdempotencyKey: "1kok1o3ko1k3o12ko31o23",
 	}
-	srv := NewWithdrawalService(withdrawRepo, txManager, accountRepo, transactionRepo)
+	srv := NewWithdrawalService(idempotencyRepo, withdrawRepo, txManager, accountRepo, transactionRepo)
 
-	err := srv.Create(context.Background(), req)
+	_, err := srv.Create(context.Background(), req, 1)
 
 	if err != nil {
 		t.Fatalf("Expected success, got %v", err)
@@ -152,12 +168,13 @@ func TestWithdrawalErrors(t *testing.T) {
 			txManager := &fakeTxManager{}
 			accountRepo := &fakeAccountRepo{}
 			transactionRepo := &fakeTransactionRepo{}
+			idempotencyRepo := &fakeIdempotencyrepo{}
 
 			test.setup(withdrawalRepo, txManager, accountRepo, transactionRepo)
 
-			srv := NewWithdrawalService(withdrawalRepo, txManager, accountRepo, transactionRepo)
+			srv := NewWithdrawalService(idempotencyRepo, withdrawalRepo, txManager, accountRepo, transactionRepo)
 
-			err := srv.Create(context.Background(), test.req)
+			_, err := srv.Create(context.Background(), test.req, 1)
 
 			if !errors.Is(err, test.wantedError) {
 				t.Fatalf("Expected error: %v, got %v", test.wantedError, err)
@@ -473,12 +490,13 @@ func TestWithdrawalRepoErrors(t *testing.T) {
 			txManager := &fakeTxManager{}
 			accountRepo := &fakeAccountRepo{}
 			transactionRepo := &fakeTransactionRepo{}
+			idempotencyRepo := &fakeIdempotencyrepo{}
 
 			test.setup(withdrawalRepo, txManager, accountRepo, transactionRepo)
 
-			srv := NewWithdrawalService(withdrawalRepo, txManager, accountRepo, transactionRepo)
+			srv := NewWithdrawalService(idempotencyRepo, withdrawalRepo, txManager, accountRepo, transactionRepo)
 
-			err := srv.Create(context.Background(), test.req)
+			_, err := srv.Create(context.Background(), test.req, 1)
 
 			if !errors.Is(err, test.wantError) {
 				t.Fatalf("Expected error: %v, got %v", test.wantError, err)
