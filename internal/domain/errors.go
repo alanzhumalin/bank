@@ -44,6 +44,10 @@ var (
 )
 
 var (
-	ErrorNoRowsInserted = errors.New("No rows inserted")
-	ErrorNoRowsChanged  = errors.New("No rows changed")
+	ErrorNoRowsInserted           = errors.New("No rows inserted")
+	ErrorNoRowsChanged            = errors.New("No rows changed")
+	ErrorIdempotencyKeyNotFound   = errors.New("Error idempotency not found")
+	ErrorIdempotencyAlreadyExists = errors.New("Error idempotency already exists")
+	ErrorIdempotencyFailed        = errors.New("Error idempotency failed")
+	ErrorIdempotencyPending       = errors.New("Error idempotency pending")
 )
