@@ -15,11 +15,19 @@ import (
 type fakeIdempotencyRedis struct {
 }
 
-func (f *fakeIdempotencyRedis) Start(ctx context.Context, key string, res dto.IdempotencyResponse) (bool, dto.IdempotencyResponse, error)
-func (f *fakeIdempotencyRedis) Complete(ctx context.Context, key string, res dto.IdempotencyResponse) error
+func (f *fakeIdempotencyRedis) Start(ctx context.Context, key string, res dto.IdempotencyResponse) (bool, dto.IdempotencyResponse, error) {
+	return true, dto.IdempotencyResponse{}, nil
+}
+func (f *fakeIdempotencyRedis) Complete(ctx context.Context, key string, res dto.IdempotencyResponse) error {
+	return nil
+}
 
-func (f *fakeIdempotencyRedis) Failed(ctx context.Context, key string, res dto.IdempotencyResponse) error
-func (f *fakeIdempotencyRedis) Delete(ctx context.Context, key string) error
+func (f *fakeIdempotencyRedis) Failed(ctx context.Context, key string, res dto.IdempotencyResponse) error {
+	return nil
+}
+func (f *fakeIdempotencyRedis) Delete(ctx context.Context, key string) error {
+	return nil
+}
 
 type fakeWithdrawalService struct {
 	createCalled bool
@@ -58,6 +66,8 @@ func TestWithdrawalHandlerCreateSuccess(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/withdrawals/", body)
 	res := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), dto.UserKey{}, 31)
+	req = req.WithContext(ctx)
 
 	handler.Create(res, req)
 
@@ -144,6 +154,8 @@ func TestWithdrawalCreateError(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/withdrawals/", body)
 	res := httptest.NewRecorder()
+	ctx := context.WithValue(req.Context(), dto.UserKey{}, 31)
+	req = req.WithContext(ctx)
 
 	handler := NewWithDrawalHandler(idempotencyStore, withdrawalService, logger)
 
