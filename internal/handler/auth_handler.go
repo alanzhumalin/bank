@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
@@ -113,7 +114,21 @@ func (ah *authHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ah.authService.Logout(r.Context(), sessionId); err != nil {
+	jti, ok := r.Context().Value(dto.JTIKey{}).(string)
+
+	if !ok {
+		response.WriteError(w, http.StatusBadRequest, "bad request")
+		return
+	}
+
+	exp, ok := r.Context().Value(dto.ExpKey{}).(time.Time)
+
+	if !ok {
+		response.WriteError(w, http.StatusBadRequest, "bad request")
+		return
+	}
+
+	if err := ah.authService.Logout(r.Context(), sessionId, jti, exp); err != nil {
 		switch {
 		case errors.Is(err, domain.ErrorSessionNotFound):
 			response.WriteError(w, http.StatusNotFound, "session not found")
@@ -125,7 +140,7 @@ func (ah *authHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ah.logger.Info().Str("session_id", sessionId).Msg("Logout")
-	response.WriteJson(w, http.StatusOK, "")
+	response.WriteJson(w, http.StatusOK, "logout")
 }
 
 func (ah *authHandler) LogoutFromAllDevices(w http.ResponseWriter, r *http.Request) {
