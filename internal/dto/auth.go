@@ -61,3 +61,8 @@ type SessionKey struct{}
 type JTIKey struct {
 }
 type ExpKey struct{}
+
+type OTPRequest struct {
+	ChallengeId string `json:"challenge_id"`
+	CodeHash    string `json:"code_hash"`
+}
