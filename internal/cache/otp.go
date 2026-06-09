@@ -11,13 +11,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type OTPStore struct {
+type otpStore struct {
 	redisClient *redis.Client
 	ttlDuration time.Duration
 }
 
-func NewOTPStore(redisClient *redis.Client, ttlDuration time.Duration) (*OTPStore, error) {
-	if redisClient != nil {
+func NewOTPStore(redisClient *redis.Client, ttlDuration time.Duration) (*otpStore, error) {
+	if redisClient == nil {
 		return nil, RedisClientIsRequired
 	}
 
@@ -25,13 +25,13 @@ func NewOTPStore(redisClient *redis.Client, ttlDuration time.Duration) (*OTPStor
 		return nil, TTLIsRequired
 	}
 
-	return &OTPStore{
+	return &otpStore{
 		redisClient: redisClient,
 		ttlDuration: ttlDuration,
 	}, nil
 }
 
-func (o *OTPStore) Save(ctx context.Context, event string, challengeId string, detail domain.OTPDetail) error {
+func (o *otpStore) Save(ctx context.Context, event string, challengeId string, detail domain.OTPDetail) error {
 	key := fmt.Sprintf("otp:%s:%s", event, challengeId)
 
 	b, err := json.Marshal(detail)
@@ -47,39 +47,39 @@ func (o *OTPStore) Save(ctx context.Context, event string, challengeId string, d
 	return nil
 }
 
-func (o *OTPStore) Verify(ctx context.Context, event string, request dto.OTPRequest) (bool, error) {
+func (o *otpStore) Verify(ctx context.Context, event string, challengeId string, codeHash string) (bool, string, error) {
 
-	if request.ChallengeId == "" {
-		return false, dto.ChallengeIdIsRequired
+	if challengeId == "" {
+		return false, "", dto.ChallengeIdIsRequired
 	}
 
-	if request.CodeHash == "" {
-		return false, dto.CodeHashIsRequired
+	if codeHash == "" {
+		return false, "", dto.CodeHashIsRequired
 	}
 
-	key := fmt.Sprintf("otp:%s:%s", event, request.ChallengeId)
+	key := fmt.Sprintf("otp:%s:%s", event, challengeId)
 
 	b, err := o.redisClient.Get(ctx, key).Bytes()
 
 	if err != nil {
-		return false, fmt.Errorf("error in get the key from redis for otp: %w", err)
+		return false, "", fmt.Errorf("error in get the key from redis for otp: %w", err)
 	}
 
 	var detail domain.OTPDetail
 
 	if err := json.Unmarshal(b, &detail); err != nil {
-		return false, fmt.Errorf("error in unmarshaling the bytes from redis otp: %w", err)
+		return false, "", fmt.Errorf("error in unmarshaling the bytes from redis otp: %w", err)
 	}
 
-	if detail.CodeHash != request.CodeHash {
+	if detail.CodeHash != codeHash {
 
-		return false, nil
+		return false, "", nil
 	}
 
-	return true, nil
+	return true, detail.PhoneNumber, nil
 }
 
-func (o *OTPStore) Delete(ctx context.Context, key string) error {
+func (o *otpStore) Delete(ctx context.Context, key string) error {
 	if err := o.redisClient.Del(ctx, key).Err(); err != nil {
 		return fmt.Errorf("error in deleting key from redis: %w", err)
 	}
