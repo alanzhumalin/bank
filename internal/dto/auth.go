@@ -64,5 +64,21 @@ type ExpKey struct{}
 
 type OTPRequest struct {
 	ChallengeId string `json:"challenge_id"`
-	CodeHash    string `json:"code_hash"`
+	Code        string `json:"code"`
+}
+
+func (o *OTPRequest) Validate() error {
+	if o.ChallengeId == "" {
+		return ChallengeIdRequired
+	}
+
+	if o.Code == "" {
+		return CodeRequired
+	}
+
+	return nil
+}
+
+type LoginResponse struct {
+	ChallengeId string `json:"challenge_id"`
 }

@@ -29,6 +29,7 @@ func AuthRouter(ah *authHandler, auth middleware.Middleware) http.Handler {
 	mux.Handle("POST /refresh", middleware.Chain(http.HandlerFunc(ah.Refresh)))
 	mux.Handle("POST /logout", middleware.Chain(http.HandlerFunc(ah.Logout), auth))
 	mux.Handle("POST /logoutall", middleware.Chain(http.HandlerFunc(ah.LogoutFromAllDevices), auth))
+	mux.Handle("POST /otp", http.HandlerFunc(ah.OTP))
 
 	return mux
 }
@@ -72,6 +73,45 @@ func (ah *authHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (ah *authHandler) OTP(w http.ResponseWriter, r *http.Request) {
+	var req dto.OTPRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.WriteError(w, http.StatusBadRequest, "invalid json")
+		return
+	}
+
+	if err := req.Validate(); err != nil {
+		response.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	metadata := GetRequestMetadata(r)
+
+	tokens, err := ah.authService.OTP(r.Context(), req, metadata.Ip, metadata.Agent)
+
+	if err != nil {
+
+		switch {
+		case errors.Is(err, domain.ErrorOTPIncorrect):
+			response.WriteError(w, http.StatusNotFound, err.Error())
+		case errors.Is(err, dto.CodeRequired):
+			response.WriteError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, domain.ErrorUserNotFound):
+			response.WriteError(w, http.StatusNotFound, err.Error())
+		default:
+			ah.logger.Error().Err(err).Msg("Error in login")
+			response.WriteError(w, http.StatusInternalServerError, "internal server error")
+
+		}
+
+		return
+	}
+
+	ah.logger.Info().Msg("OTP confirmed")
+
+	response.WriteJson(w, http.StatusOK, tokens)
+}
+
 func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 
@@ -85,9 +125,7 @@ func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	metadata := GetRequestMetadata(r)
-
-	token, err := ah.authService.Login(r.Context(), req, metadata.Ip, metadata.Agent)
+	challengeId, err := ah.authService.Login(r.Context(), req)
 
 	if err != nil {
 		switch {
@@ -103,7 +141,9 @@ func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ah.logger.Info().Msg("Login")
-	response.WriteJson(w, http.StatusOK, token)
+	response.WriteJson(w, http.StatusOK, dto.LoginResponse{
+		ChallengeId: challengeId,
+	})
 }
 
 func (ah *authHandler) Logout(w http.ResponseWriter, r *http.Request) {

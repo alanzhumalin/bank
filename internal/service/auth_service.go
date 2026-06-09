@@ -9,6 +9,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/alanzhumalin/bank/internal/repository"
+	generateotp "github.com/alanzhumalin/bank/pkg/generate_otp"
 	"github.com/alanzhumalin/bank/pkg/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -20,10 +21,11 @@ type authService struct {
 	txManager      repository.TxManagerRepository
 	userService    UserService
 	blackListToken cache.TokenBlackList
+	otpRedis       cache.OTPStore
 }
 
-func NewAuthService(blackListToken cache.TokenBlackList, tokenKey *string, authRepository repository.AuthRepository, userService UserService, txManager repository.TxManagerRepository) AuthService {
-	return &authService{blackListToken: blackListToken, tokenKey: tokenKey, authRepository: authRepository, userService: userService, txManager: txManager}
+func NewAuthService(otpRedis cache.OTPStore, blackListToken cache.TokenBlackList, tokenKey *string, authRepository repository.AuthRepository, userService UserService, txManager repository.TxManagerRepository) AuthService {
+	return &authService{otpRedis: otpRedis, blackListToken: blackListToken, tokenKey: tokenKey, authRepository: authRepository, userService: userService, txManager: txManager}
 }
 
 func (a *authService) Register(ctx context.Context, req dto.RegisterRequest, ip string, device string) (*dto.TokenPair, error) {
@@ -87,18 +89,64 @@ func (a *authService) Register(ctx context.Context, req dto.RegisterRequest, ip 
 	return token, nil
 }
 
-func (a *authService) Login(ctx context.Context, req dto.LoginRequest, ip string, device string) (*dto.TokenPair, error) {
+func (a *authService) Login(ctx context.Context, req dto.LoginRequest) (string, error) {
 
 	userDetails, err := a.authRepository.GetDetails(ctx, req.PhoneNumber)
 
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	hashedPassword := userDetails.Password
 
 	if err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password)); err != nil {
-		return &dto.TokenPair{}, domain.ErrorPasswordNotCorrect
+		return "", domain.ErrorPasswordNotCorrect
 	}
+
+	challengeId := uuid.NewString()
+
+	otp, err := generateotp.GenerateOtp()
+	fmt.Println(otp)
+	if err != nil {
+		return "", err
+	}
+	hashedOtp, err := generateotp.HashOtp(otp)
+
+	if err != nil {
+		return "", err
+	}
+
+	otpDetail := domain.OTPDetail{
+		UserId:      userDetails.UserId,
+		Attempt:     1,
+		PhoneNumber: req.PhoneNumber,
+		CodeHash:    hashedOtp,
+	}
+
+	if err = a.otpRedis.Save(ctx, "login", challengeId, otpDetail); err != nil {
+		return "", err
+	}
+
+	return challengeId, nil
+
+}
+
+func (a *authService) OTP(ctx context.Context, req dto.OTPRequest, ip string, device string) (*dto.TokenPair, error) {
+	codeHash, err := generateotp.HashOtp(req.Code)
+	if err != nil {
+		return nil, err
+	}
+	ok, phoneNumber, err := a.otpRedis.Verify(ctx, "login", req.ChallengeId, codeHash)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !ok {
+		return &dto.TokenPair{}, domain.ErrorOTPIncorrect
+	}
+
+	userDetails, err := a.authRepository.GetDetails(ctx, phoneNumber)
+
 	sessionId := uuid.New().String()
 
 	accessToken, err := jwt.GeneratateAccessToken(userDetails.UserId, userDetails.Role, sessionId, *a.tokenKey)
