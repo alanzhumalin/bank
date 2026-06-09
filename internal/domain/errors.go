@@ -51,3 +51,7 @@ var (
 	ErrorIdempotencyFailed        = errors.New("Error idempotency failed")
 	ErrorIdempotencyPending       = errors.New("Error idempotency pending")
 )
+
+var (
+	ErrorOTPIncorrect = errors.New("Otp is incorrect")
+)
