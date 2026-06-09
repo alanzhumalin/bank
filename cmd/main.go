@@ -81,6 +81,14 @@ func main() {
 		logger.Fatal().Err(err).Msg("Error occured initializing the idempotency redis")
 		os.Exit(1)
 	}
+
+	otpRedis, err := cache.NewOTPStore(redisClient, 5*time.Minute)
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error occured initializing the otp redis")
+		os.Exit(1)
+	}
+
 	blackListTokenRedis, err := cache.NewTokenBlackList(redisClient)
 
 	if err != nil {
@@ -125,7 +133,7 @@ func main() {
 	depositRouter := handler.DepositRouter(depositHandler)
 
 	authRepository := repository.NewAuthRepository(pool)
-	authService := service.NewAuthService(blackListTokenRedis, &cfg.TokenKey, authRepository, userService, txManager)
+	authService := service.NewAuthService(otpRedis, blackListTokenRedis, &cfg.TokenKey, authRepository, userService, txManager)
 	authHandler := handler.NewAuthHandler(userService, authService, logger)
 	authRouter := handler.AuthRouter(authHandler, authMiddleware)
 
