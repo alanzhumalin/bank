@@ -16,10 +16,13 @@ import (
 	"github.com/alanzhumalin/bank/internal/db"
 	"github.com/alanzhumalin/bank/internal/handler"
 	"github.com/alanzhumalin/bank/internal/logger"
+	"github.com/alanzhumalin/bank/internal/metrics"
 	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/repository"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/internal/tracing"
 	"github.com/joho/godotenv"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -57,6 +60,19 @@ func main() {
 	}
 
 	defer redisClient.Close()
+
+	tp, err := tracing.Init(context.Background())
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error initializing the opentelemetry sdk")
+		os.Exit(1)
+	}
+
+	defer func() {
+		_ = tp.Shutdown(context.Background())
+	}()
+
+	metrics.Register()
 
 	duration := 1 * time.Minute
 	limitReq := int64(10)
@@ -138,7 +154,7 @@ func main() {
 	authRouter := handler.AuthRouter(authHandler, authMiddleware)
 
 	root := http.NewServeMux()
-
+	root.Handle("/metrics/", promhttp.Handler())
 	root.Handle("/auth/", http.StripPrefix("/auth", authRouter))
 
 	root.Handle("/deposits/", http.StripPrefix("/deposits", depositRouter))
@@ -152,7 +168,7 @@ func main() {
 
 	srv := http.Server{
 		Addr:    ":8081",
-		Handler: withCORS(root),
+		Handler: middleware.MetricsMiddleware()(withCORS(root)),
 	}
 
 	go func() {
