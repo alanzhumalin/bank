@@ -20,6 +20,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/middleware"
 	"github.com/alanzhumalin/bank/internal/repository"
 	"github.com/alanzhumalin/bank/internal/service"
+	"github.com/alanzhumalin/bank/internal/tracing"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -59,6 +60,17 @@ func main() {
 	}
 
 	defer redisClient.Close()
+
+	tp, err := tracing.Init(context.Background())
+
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Error initializing the opentelemetry sdk")
+		os.Exit(1)
+	}
+
+	defer func() {
+		_ = tp.Shutdown(context.Background())
+	}()
 
 	metrics.Register()
 

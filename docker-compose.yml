@@ -63,9 +63,19 @@ services:
     restart: unless-stopped
 
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: bank-jaeger
+    ports:
+      - "16686:16686" 
+      - "4318:4318"  
+    
+
+
 volumes:
   postgres_data:
   redis_data:
     driver: local
   prometheus:
   grafana_data:
+  jaegar_data:
