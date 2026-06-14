@@ -9,6 +9,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/alanzhumalin/bank/internal/dto"
 	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel"
 )
 
 type otpStore struct {
@@ -32,6 +33,9 @@ func NewOTPStore(redisClient *redis.Client, ttlDuration time.Duration) (*otpStor
 }
 
 func (o *otpStore) Save(ctx context.Context, event string, challengeId string, detail domain.OTPDetail) error {
+	ctx, span := otel.Tracer("bank-api").Start(ctx, "OTP.Save")
+
+	defer span.End()
 	key := fmt.Sprintf("otp:%s:%s", event, challengeId)
 
 	b, err := json.Marshal(detail)

@@ -9,6 +9,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/domain"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/otel"
 )
 
 type authRepository struct {
@@ -26,9 +27,12 @@ func NewAuthRepository(pool *pgxpool.Pool) AuthRepository {
 }
 
 func (a *authRepository) GetDetails(context context.Context, phoneNumber string) (LoginDetails, error) {
+	ctx, span := otel.Tracer("bank-api").Start(context, "AuthRepository.GetDetails")
+
+	defer span.End()
 	var loginDetails LoginDetails
 
-	err := a.pool.QueryRow(context, `select id, role, password from users where phone_number = $1`, phoneNumber).Scan(&loginDetails.UserId, &loginDetails.Role, &loginDetails.Password)
+	err := a.pool.QueryRow(ctx, `select id, role, password from users where phone_number = $1`, phoneNumber).Scan(&loginDetails.UserId, &loginDetails.Role, &loginDetails.Password)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return LoginDetails{}, domain.ErrorUserNotFound

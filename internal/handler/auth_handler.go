@@ -13,6 +13,7 @@ import (
 	"github.com/alanzhumalin/bank/internal/service"
 	"github.com/alanzhumalin/bank/pkg/response"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel"
 )
 
 type authHandler struct {
@@ -113,6 +114,11 @@ func (ah *authHandler) OTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
+
+	ctx, span := otel.Tracer("bank-api").Start(r.Context(), "AuthHandler.Login")
+
+	defer span.End()
+
 	var req dto.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -125,7 +131,7 @@ func (ah *authHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	challengeId, err := ah.authService.Login(r.Context(), req)
+	challengeId, err := ah.authService.Login(ctx, req)
 
 	if err != nil {
 		switch {

@@ -12,6 +12,7 @@ import (
 	generateotp "github.com/alanzhumalin/bank/pkg/generate_otp"
 	"github.com/alanzhumalin/bank/pkg/jwt"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -90,6 +91,10 @@ func (a *authService) Register(ctx context.Context, req dto.RegisterRequest, ip 
 }
 
 func (a *authService) Login(ctx context.Context, req dto.LoginRequest) (string, error) {
+
+	ctx, span := otel.Tracer("bank-api").Start(ctx, "AuthService.Login")
+
+	defer span.End()
 
 	userDetails, err := a.authRepository.GetDetails(ctx, req.PhoneNumber)
 
